@@ -163,6 +163,7 @@
   function closeRank(){$('s-rank').hidden=true;if(RK.from)$(RK.from).hidden=false}
   function wireRank(){
     if(!$('s-rank'))return;
+    if(!ok){['t-rank','end-rank'].forEach(id=>{const e=$(id);if(e)e.hidden=true});return}
     $('t-rank').onclick=()=>openRank('s-title');
     $('end-rank').onclick=()=>openRank('s-end');
     $('rk-back').onclick=closeRank;
