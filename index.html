@@ -8,6 +8,8 @@
 <meta property="og:description" content="Black Bloc ou police : choisis ton camp, de la Bastille à la République.">
 <meta property="og:type" content="website">
 <meta name="theme-color" content="#1d1230">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'sha256-k2LXefU4j9WexL8/sRmZAV6K2z8iDYEELIupDUaK1yU=' 'sha256-8Qnm0ep+e+z7/xdAhvM2AS4r0MnI8O/8AGJumP/X5Go='; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob:; media-src 'self' blob: https://*.supabase.co; connect-src 'self' https://*.supabase.co wss://*.supabase.co; base-uri 'none'; form-action 'none'; object-src 'none'">
+<meta name="referrer" content="strict-origin-when-cross-origin">
 <title>Bastille</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;700;900&family=Silkscreen:wght@400;700&family=Figtree:wght@400;600;800&display=swap">
@@ -184,9 +186,25 @@ canvas#c{position:absolute;inset:0;width:100%;height:100%;display:block;touch-ac
 .linkbtn{background:none;border:0;padding:2px 0;color:var(--cobalt);font:600 12.5px var(--sans);text-decoration:underline;cursor:pointer;align-self:flex-start}
 #mailmsg{display:block;font-style:normal;font-size:12.5px;font-weight:700;min-height:1em;margin-top:6px}
 #mailmsg.err{color:var(--coral2)}#mailmsg.ok{color:var(--mint2)}
+#mailbox .rk{font-weight:700;color:var(--ink)}
+.row2{display:flex;gap:14px;flex-wrap:wrap}.linkbtn.danger{color:var(--coral2)}
+#s-rank{justify-content:flex-start;padding-top:40px}
+#s-rank .tabs{display:flex;gap:6px;flex-wrap:wrap;justify-content:center}
+#s-rank .tabs button{font:700 10px var(--pix);letter-spacing:.06em;padding:7px 10px;border-radius:10px;border:2px solid var(--paper);background:transparent;color:var(--paper);cursor:pointer}
+#s-rank .tabs button.on{background:var(--sun);border-color:var(--sun);color:var(--ink)}
+#rkList{list-style:none;margin:0;padding:0;width:100%;max-width:330px;display:flex;flex-direction:column;gap:6px;text-align:left}
+#rkList li{display:flex;align-items:center;gap:10px;background:var(--card);color:var(--ink);border:2px solid var(--ink);border-radius:12px;padding:7px 10px;box-shadow:3px 3px 0 var(--ink)}
+#rkList li.me{box-shadow:3px 3px 0 var(--mint);border-color:var(--mint2)}
+#rkList li.empty{justify-content:center;color:var(--plum);font-size:14px}
+#rkList b{font:700 12px var(--pix);min-width:30px}
+#rkList div{flex:1;min-width:0;display:flex;flex-direction:column}
+#rkList span{font:700 13px var(--sans);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#rkList small{font-size:11px;color:var(--plum)}
+#rkList em{font:700 12px var(--pix);font-style:normal;white-space:nowrap}
+#rkMe{font-size:13px;color:var(--paper);max-width:330px}
 </style>
 <script src="config.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script src="vendor/supabase-2.45.4.js"></script>
 <script src="rec.js"></script>
 <script src="account.js"></script>
 </head>
@@ -218,9 +236,18 @@ canvas#c{position:absolute;inset:0;width:100%;height:100%;display:block;touch-ac
     <p class="sub" id="t-sub">MANIF</p>
     <div class="panel stats"><span>HI-SCORE<b id="t-hi">0</b></span><span>STAGE MAX<b id="t-st">1</b></span><span>PIÈCES<b id="t-coins">0</b></span></div>
     <button class="btn" id="t-play">JOUER</button>
-    <div class="row"><button class="btn alt sm" id="t-shop">KIOSQUE</button><button class="btn alt sm" id="t-ach">PROFIL</button><button class="btn alt sm" id="t-sound">SON : ON</button></div>
+    <div class="row"><button class="btn alt sm" id="t-shop">KIOSQUE</button><button class="btn alt sm" id="t-ach">PROFIL</button><button class="btn alt sm" id="t-rank">CLASSEMENT</button><button class="btn alt sm" id="t-sound">SON : ON</button></div>
     <p>Glisse le doigt pour bouger. Tu tires tout seul. BOMBE et SPÉCIAL en bas.</p>
     <span class="blink">INSERT COIN</span>
+  </div>
+
+  <div class="screen" id="s-rank" hidden>
+    <h2>CLASSEMENT</h2>
+    <div class="tabs" id="rkSide"><button type="button" data-v="bloc">BLACK BLOC</button><button type="button" data-v="police">POLICE</button></div>
+    <div class="tabs" id="rkPer"><button type="button" data-v="day">AUJOURD'HUI</button><button type="button" data-v="week">7 JOURS</button><button type="button" data-v="all">TOUJOURS</button></div>
+    <ol id="rkList"></ol>
+    <p id="rkMe"></p>
+    <button class="btn alt sm" id="rk-back" type="button">RETOUR</button>
   </div>
 
   <div class="screen" id="s-camp" hidden>
@@ -287,10 +314,13 @@ canvas#c{position:absolute;inset:0;width:100%;height:100%;display:block;touch-ac
         <b>Connecté : <em id="mbwho"></em></b>
         <button class="btn sm" id="mbsend" type="button">M'ENVOYER CE SCORE + LA VIDÉO</button>
         <div id="mbrefrow" hidden><span>Ton lien d'invitation : +200 crédits par ami inscrit</span><div class="refrow"><input id="mbref" readonly aria-label="Lien d'invitation"><button class="btn alt sm" id="mbcopy" type="button">COPIER</button></div></div>
-        <button class="linkbtn" id="mbout" type="button">Se déconnecter</button>
+        <span id="mbrank" class="rk"></span>
+        <span>Ton pseudo au classement : <em id="mbpseudo"></em> <button class="linkbtn" id="mbreroll" type="button">changer</button></span>
+        <div class="row2"><button class="linkbtn" id="mbout" type="button">Se déconnecter</button><button class="linkbtn danger" id="mbdel" type="button">Supprimer mon compte</button></div>
       </div>
       <i id="mailmsg" aria-live="polite"></i>
     </div>
+    <button class="btn alt sm" id="end-rank" type="button">CLASSEMENT</button>
     <div id="sharebox"><input id="sharetxt" readonly aria-label="Texte à partager"><button class="btn alt sm" id="copybtn">COPIER</button></div>
     <div class="row"><button class="btn" id="again">REJOUER</button><button class="btn alt sm" id="end-shop">KIOSQUE</button></div>
   </div>

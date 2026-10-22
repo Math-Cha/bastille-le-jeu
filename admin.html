@@ -2,6 +2,8 @@
 <html lang="fr">
 <head>
 <meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'sha256-5DguXBEmwmSvDa1iyO+5TKCeC/b8ghP07izzmLwtVvQ='; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob:; media-src 'self' blob: https://*.supabase.co; connect-src 'self' https://*.supabase.co wss://*.supabase.co; base-uri 'none'; form-action 'none'; object-src 'none'">
+<meta name="referrer" content="strict-origin-when-cross-origin">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="robots" content="noindex,nofollow">
 <title>Bastille · Admin</title>
@@ -111,14 +113,14 @@ td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
 
     <div class="panel">
       <div class="row" style="justify-content:space-between;margin-bottom:8px"><h2 style="margin:0">Joueurs inscrits <span id="nMail"></span></h2><button class="btn" id="csv">Exporter CSV</button></div>
-      <div class="tablewrap"><table><thead><tr><th>E-mail</th><th>Newsletter</th><th class="num">Filleuls</th><th class="num">Crédits</th><th class="num">Parties</th><th>Inscription</th></tr></thead><tbody id="tMail"></tbody></table></div>
-      <p class="note">Chaque adresse a été vérifiée par un code. N'utilisez pour la newsletter que les adresses « Oui ». Pour supprimer un joueur : Supabase → Authentication → Users.</p>
+      <div class="tablewrap"><table><thead><tr><th>E-mail</th><th>Pseudo</th><th>Newsletter</th><th class="num">Filleuls</th><th class="num">Crédits</th><th class="num">Parties</th><th class="num">Record</th><th>Inscription</th><th>Classement</th></tr></thead><tbody id="tMail"></tbody></table></div>
+      <p class="note">Chaque adresse a été vérifiée par un code. N'utilisez pour la newsletter que les adresses « Oui ». « Exclure » retire un joueur du classement (score suspect) sans supprimer ses données. Le joueur peut supprimer lui-même son compte depuis le jeu ; sinon : Supabase → Authentication → Users.</p>
     </div>
   </main>
 </div>
 <script src="config.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.js"></script>
+<script src="vendor/supabase-2.45.4.js"></script>
+<script src="vendor/chart-4.4.1.js"></script>
 <script>
 (function(){
   const $=id=>document.getElementById(id);
@@ -161,7 +163,7 @@ td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
       const [visits,games,profiles]=await Promise.all([
         fetchAll('visits','visitor,referrer,device,ref,created_at'),
         fetchAll('games','visitor,user_id,side,score,stage,bosses,duration_s,device,tenue,arme,exo,picked,perks,clip,mailed_at,created_at'),
-        fetchAll('profiles','id,email,news_consent,ref_code,referred_by,credits_bonus,created_at')]);
+        fetchAll('profiles','id,email,pseudo,banned,news_consent,ref_code,referred_by,credits_bonus,created_at')]);
       DATA={visits,games,profiles};render();
     }catch(err){$('kpis').innerHTML='<div class="kpi"><small>Accès refusé ou erreur</small><i></i></div>';$('kpis').querySelector('i').textContent=err.message||String(err)}
   }
@@ -234,13 +236,17 @@ td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
     const refsrc={};V.forEach(v=>{const r=v.ref?'Lien de parrainage':(v.referrer||'Accès direct');refsrc[r]=(refsrc[r]||0)+1});
     const tr=$('tRef');tr.textContent='';Object.entries(refsrc).sort((a,b)=>b[1]-a[1]).slice(0,30).forEach(([r,n])=>{const t=document.createElement('tr');const a=document.createElement('td');a.textContent=r;const b=document.createElement('td');b.className='num';b.textContent=fmt(n);t.append(a,b);tr.appendChild(t)});
 
-    const kids={},plays={};DATA.profiles.forEach(x=>{if(x.referred_by)kids[x.referred_by]=(kids[x.referred_by]||0)+1});DATA.games.forEach(g=>{if(g.user_id)plays[g.user_id]=(plays[g.user_id]||0)+1});
+    const kids={},plays={},best={};DATA.profiles.forEach(x=>{if(x.referred_by)kids[x.referred_by]=(kids[x.referred_by]||0)+1});DATA.games.forEach(g=>{if(g.user_id){plays[g.user_id]=(plays[g.user_id]||0)+1;const v=(g.side==='bloc'?fmt(g.score)+' €':fmt(g.score)+' int.');if(!best[g.user_id]||g.score>(best[g.user_id+'_n']||0)){best[g.user_id]=v;best[g.user_id+'_n']=g.score}}});
     $('nMail').textContent='('+fmt(DATA.profiles.length)+' au total)';
     const tm=$('tMail');tm.textContent='';
     DATA.profiles.forEach(pl=>{const t=document.createElement('tr');
       const c=(txt,cls)=>{const td=document.createElement('td');if(cls)td.className=cls;td.textContent=txt;t.appendChild(td)};
-      c(pl.email);c(pl.news_consent?'Oui':'Non');c(fmt(kids[pl.id]),'num');c(fmt(pl.credits_bonus),'num');c(fmt(plays[pl.id]),'num');
-      c(new Date(pl.created_at).toLocaleString('fr-FR',{dateStyle:'short',timeStyle:'short'}));tm.appendChild(t)});
+      c(pl.email);c(pl.pseudo||'—');c(pl.news_consent?'Oui':'Non');c(fmt(kids[pl.id]),'num');c(fmt(pl.credits_bonus),'num');c(fmt(plays[pl.id]),'num');c(best[pl.id]||'—','num');
+      c(new Date(pl.created_at).toLocaleString('fr-FR',{dateStyle:'short',timeStyle:'short'}));
+      const td=document.createElement('td');const bt=document.createElement('button');bt.className='btn alt';bt.style.cssText='padding:3px 8px;font-size:12px';
+      bt.textContent=pl.banned?'Réintégrer':'Exclure';if(pl.banned)t.style.opacity='.55';
+      bt.onclick=async()=>{bt.disabled=true;const {error}=await sb.rpc('admin_set_banned',{uid:pl.id,ban:!pl.banned});if(!error){pl.banned=!pl.banned;render()}else{bt.textContent='Erreur';bt.disabled=false}};
+      td.appendChild(bt);t.appendChild(td);tm.appendChild(t)});
   }
 
   $('csv').onclick=()=>{if(!DATA)return;const esc=v=>'"'+String(v??'').replace(/"/g,'""')+'"';

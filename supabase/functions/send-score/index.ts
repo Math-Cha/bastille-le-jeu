@@ -2,18 +2,26 @@
 // Secrets à définir dans Supabase (Edge Functions → Secrets) : BREVO_API_KEY, MAIL_FROM, SITE_URL
 import { createClient } from "npm:@supabase/supabase-js@2.45.4";
 
-const CORS = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-  "Access-Control-Allow-Methods": "POST, OPTIONS",
-};
+// Seules les pages du site (SITE_URL, et ALLOWED_ORIGINS séparées par des virgules) peuvent appeler la fonction
+const ORIGINS = [Deno.env.get("SITE_URL") || "", ...(Deno.env.get("ALLOWED_ORIGINS") || "").split(",")]
+  .map((u) => { try { return new URL(u.trim()).origin; } catch { return ""; } }).filter(Boolean);
+let CORS: Record<string, string> = {};
 const json = (b: unknown, status = 200) =>
   new Response(JSON.stringify(b), { status, headers: { ...CORS, "Content-Type": "application/json" } });
 const esc = (s: string) => s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]!));
 const fr = (n: number) => Math.round(n).toLocaleString("fr-FR");
 
 Deno.serve(async (req) => {
+  const origin = req.headers.get("Origin") || "";
+  CORS = {
+    "Access-Control-Allow-Origin": ORIGINS.includes(origin) ? origin : (ORIGINS[0] || "null"),
+    "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+    "Access-Control-Allow-Methods": "POST, OPTIONS",
+    "Vary": "Origin",
+  };
   if (req.method === "OPTIONS") return new Response("ok", { headers: CORS });
+  if (!ORIGINS.includes(origin)) return json({ error: "origin" }, 403);
+  if (Number(req.headers.get("content-length") || 0) > 2048) return json({ error: "too_large" }, 413);
   if (req.method !== "POST") return json({ error: "method" }, 405);
   try {
     const URL_ = Deno.env.get("SUPABASE_URL")!;

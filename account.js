@@ -24,8 +24,8 @@
 
   async function syncCredits(){
     const u=await user();if(!u)return;
-    const {data}=await sb.from('profiles').select('credits_bonus,ref_code').eq('id',u.id).maybeSingle();if(!data)return;
-    LS.set('bt_refcode',data.ref_code);
+    const {data}=await sb.from('profiles').select('credits_bonus,ref_code,pseudo').eq('id',u.id).maybeSingle();if(!data)return;
+    LS.set('bt_refcode',data.ref_code);if(data.pseudo)LS.set('bt_pseudo',data.pseudo);
     const k='bt_claimed_'+u.id,done=+(LS.get(k)||0),delta=(data.credits_bonus||0)-done;
     if(delta>0&&window.__btAddCoins){window.__btAddCoins(delta);LS.set(k,String(data.credits_bonus));toast('PARRAINAGE : +'+delta+' CRÉDITS')}
     renderAcct();
@@ -38,7 +38,7 @@
     const gkey=uuid();
     last={gkey,side:g.side,score:Math.max(0,Math.round(g.score||0)),stage:Math.max(1,g.stage|0),sent:false,uploaded:null};
     if(sb){sb.from('games').insert({gkey,visitor,side:g.side,score:last.score,stage:last.stage,bosses:Math.max(0,g.bosses|0),duration_s:Math.max(0,Math.min(86400,g.dur|0)),device,
-      tenue:(g.tenue||'').slice(0,40)||null,arme:(g.arme||'').slice(0,40)||null,exo:(g.exo||'').slice(0,40)||null,picked:(g.picked||'').slice(0,300)||null,perks:(g.perks||'').slice(0,100)||null}).then(()=>{})}
+      tenue:(g.tenue||'').slice(0,40)||null,arme:(g.arme||'').slice(0,40)||null,exo:(g.exo||'').slice(0,40)||null,picked:(g.picked||'').slice(0,300)||null,perks:(g.perks||'').slice(0,100)||null}).then(()=>setTimeout(showMyRank,600))}
     // vidéo
     clipBlob=null;$('clipbox')&&($('clipbox').hidden=true);
     if(window.__btRec&&window.__btRec.supported){
@@ -73,7 +73,7 @@
     if(!sb){box.hidden=true;return}
     box.hidden=false;
     const u=await user();
-    if(u){step(3);$('mbwho').textContent=u.email;
+    if(u){step(3);$('mbwho').textContent=u.email;$('mbpseudo').textContent=LS.get('bt_pseudo')||'…';
       const r=LS.get('bt_refcode');$('mbref').value=r?base()+'?ref='+r:'';$('mbrefrow').hidden=!r;
       const b=$('mbsend');b.disabled=!last||last.sent;b.textContent=last&&last.sent?'ENVOYÉ ✓':'M\'ENVOYER CE SCORE + LA VIDÉO';
     }else{step(pendingEmail?2:1)}
@@ -94,7 +94,7 @@
       msg('Envoi de l\'e-mail…');
       const {error}=await sb.functions.invoke('send-score',{body:{gkey:last.gkey}});
       if(error)throw error;
-      last.sent=true;msg('C\'est parti ! Regarde ta boîte mail.','ok');
+      last.sent=true;msg('C\'est parti ! Regarde ta boîte mail.','ok');showMyRank();
     }catch(e){msg('Envoi impossible pour le moment. Réessaie plus tard.','err');b.disabled=false}
     renderAcct();
   }
@@ -126,6 +126,59 @@
     $('mbcopy').onclick=async()=>{const v=$('mbref').value;try{await navigator.clipboard.writeText(v);msg('Lien copié !','ok')}catch(e){$('mbref').select()}};
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>{wire();syncCredits()});else{wire();syncCredits()}
+
+  // ---------- classement ----------
+  const RK={side:'bloc',per:'week',from:null};
+  const fmtS=(side,n)=>Number(n||0).toLocaleString('fr-FR')+(side==='bloc'?' €':'');
+  async function showMyRank(){
+    const el=$('mbrank');if(!el||!last||!sb)return;el.textContent='';
+    const u=await user();if(!u)return;
+    const {data}=await sb.rpc('my_rank',{p_side:last.side,p_period:'week'});
+    const r=data&&data[0];if(r)el.textContent='Classement de la semaine : #'+r.rank+' sur '+r.total+' (record '+fmtS(last.side,r.score)+')';
+  }
+  async function loadRank(){
+    const list=$('rkList'),me=$('rkMe');if(!list)return;
+    document.querySelectorAll('#rkSide button').forEach(b=>b.classList.toggle('on',b.dataset.v===RK.side));
+    document.querySelectorAll('#rkPer button').forEach(b=>b.classList.toggle('on',b.dataset.v===RK.per));
+    list.textContent='';me.textContent='';
+    if(!sb){const li=document.createElement('li');li.textContent='Classement indisponible pour le moment.';list.appendChild(li);return}
+    const loading=document.createElement('li');loading.className='empty';loading.textContent='Chargement…';list.appendChild(loading);
+    const {data,error}=await sb.rpc('leaderboard',{p_side:RK.side,p_period:RK.per});
+    list.textContent='';
+    if(error||!data||!data.length){const li=document.createElement('li');li.className='empty';li.textContent=error?'Classement indisponible pour le moment.':'Personne encore sur cette période. À toi !';list.appendChild(li)}
+    else data.forEach(r=>{const li=document.createElement('li');if(r.pseudo===LS.get('bt_pseudo'))li.className='me';
+      const a=document.createElement('b');a.textContent='#'+r.rank;const n=document.createElement('span');n.textContent=r.pseudo;
+      const d=document.createElement('small');d.textContent=(r.tenue?r.tenue+' · ':'')+'étape '+r.stage;
+      const sc=document.createElement('em');sc.textContent=fmtS(RK.side,r.score);
+      const mid=document.createElement('div');mid.append(n,d);li.append(a,mid,sc);list.appendChild(li)});
+    const u=await user();
+    if(u){const {data:m}=await sb.rpc('my_rank',{p_side:RK.side,p_period:RK.per});const r=m&&m[0];me.textContent=r?'Toi ('+(r.pseudo||'')+') : #'+r.rank+' sur '+r.total+' · '+fmtS(RK.side,r.score):'Tu n\'as pas encore de partie classée sur cette période.'}
+    else me.textContent='Reçois ton score par e-mail en fin de partie pour entrer au classement.';
+  }
+  function openRank(from){
+    const scr=$('s-rank');if(!scr)return;RK.from=from||null;
+    if(last&&last.side)RK.side=last.side;
+    if(from)$(from).hidden=true;scr.hidden=false;loadRank();
+  }
+  function closeRank(){$('s-rank').hidden=true;if(RK.from)$(RK.from).hidden=false}
+  function wireRank(){
+    if(!$('s-rank'))return;
+    $('t-rank').onclick=()=>openRank('s-title');
+    $('end-rank').onclick=()=>openRank('s-end');
+    $('rk-back').onclick=closeRank;
+    document.querySelectorAll('#rkSide button').forEach(b=>b.onclick=()=>{RK.side=b.dataset.v;loadRank()});
+    document.querySelectorAll('#rkPer button').forEach(b=>b.onclick=()=>{RK.per=b.dataset.v;loadRank()});
+    $('mbreroll').onclick=async()=>{const {data,error}=await sb.rpc('reroll_pseudo');if(!error&&data){LS.set('bt_pseudo',data);$('mbpseudo').textContent=data}};
+    const del=$('mbdel');del.onclick=async()=>{
+      if(del.dataset.c!=='1'){del.dataset.c='1';del.textContent='Confirmer la suppression définitive ?';setTimeout(()=>{del.dataset.c='';del.textContent='Supprimer mon compte'},5000);return}
+      msg('Suppression…');
+      try{const u=await user();if(u){const {data:files}=await sb.storage.from('clips').list(u.id,{limit:1000});if(files&&files.length)await sb.storage.from('clips').remove(files.map(f=>u.id+'/'+f.name))}
+        const {error}=await sb.rpc('delete_my_account');if(error)throw error;
+        await sb.auth.signOut();['bt_pseudo','bt_refcode'].forEach(k=>LS.del(k));msg('Compte et données supprimés.','ok');renderAcct();
+      }catch(e){msg('Suppression impossible pour le moment.','err')}
+    };
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',wireRank);else wireRank();
 
   window.__bt={enabled:()=>ok,gameStart,gameEnd,renderAcct};
 })();
