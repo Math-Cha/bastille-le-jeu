@@ -70,7 +70,7 @@
   function msg(t,cls){const m=$('mailmsg');if(m){m.textContent=t||'';m.className=cls||''}}
   async function renderAcct(){
     const box=$('mailbox');if(!box)return;
-    if(!sb){box.hidden=true;return}
+    if(!sb||!C.mail){box.hidden=true;return}
     box.hidden=false;
     const u=await user();
     if(u){step(3);$('mbwho').textContent=u.email;$('mbpseudo').textContent=LS.get('bt_pseudo')||'…';
@@ -153,7 +153,7 @@
       const mid=document.createElement('div');mid.append(n,d);li.append(a,mid,sc);list.appendChild(li)});
     const u=await user();
     if(u){const {data:m}=await sb.rpc('my_rank',{p_side:RK.side,p_period:RK.per});const r=m&&m[0];me.textContent=r?'Toi ('+(r.pseudo||'')+') : #'+r.rank+' sur '+r.total+' · '+fmtS(RK.side,r.score):'Tu n\'as pas encore de partie classée sur cette période.'}
-    else me.textContent='Reçois ton score par e-mail en fin de partie pour entrer au classement.';
+    else me.textContent=C.mail?'Reçois ton score par e-mail en fin de partie pour entrer au classement.':'Inscription au classement bientôt disponible.';
   }
   function openRank(from){
     const scr=$('s-rank');if(!scr)return;RK.from=from||null;
