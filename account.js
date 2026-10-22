@@ -2,7 +2,7 @@
 (function(){
   const C=window.BT_CONFIG||{};
   const ok=!!(C.url&&C.key&&window.supabase);
-  const sb=ok?window.supabase.createClient(C.url,C.key,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:false}}):null;
+  const sb=ok?window.supabase.createClient(C.url,C.key,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}}):null;
   const LS={get(k){try{return localStorage.getItem(k)}catch(e){return null}},set(k,v){try{localStorage.setItem(k,v)}catch(e){}},del(k){try{localStorage.removeItem(k)}catch(e){}}};
   const uuid=()=>crypto.randomUUID?crypto.randomUUID():'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g,c=>{const r=Math.random()*16|0;return(c==='x'?r:(r&3|8)).toString(16)});
   let visitor=LS.get('bt_visitor');if(!visitor){visitor=uuid();LS.set('bt_visitor',visitor)}
@@ -104,9 +104,9 @@
       const em=$('mail').value.trim();
       if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(em)){msg('Adresse e-mail invalide.','err');return}
       msg('Envoi du code…');
-      const {error}=await sb.auth.signInWithOtp({email:em,options:{shouldCreateUser:true}});
+      const {error}=await sb.auth.signInWithOtp({email:em,options:{shouldCreateUser:true,emailRedirectTo:base()}});
       if(error){msg(/rate|seconds/i.test(error.message)?'Patiente un peu avant de redemander un code.':'Impossible d\'envoyer le code.','err');return}
-      pendingEmail=em;$('mbto').textContent=em;step(2);msg('Code envoyé : regarde ta boîte mail (et les indésirables).');setTimeout(()=>$('mbcode').focus(),50);
+      pendingEmail=em;$('mbto').textContent=em;step(2);msg('E-mail envoyé : entre le code reçu, ou clique sur le lien (regarde aussi les indésirables).');setTimeout(()=>$('mbcode').focus(),50);
     });
     f2.addEventListener('submit',async ev=>{ev.preventDefault();
       const code=$('mbcode').value.replace(/\D/g,'');

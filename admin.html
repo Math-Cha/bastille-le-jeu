@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
 <meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'sha256-5DguXBEmwmSvDa1iyO+5TKCeC/b8ghP07izzmLwtVvQ='; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob:; media-src 'self' blob: https://*.supabase.co; connect-src 'self' https://*.supabase.co wss://*.supabase.co; base-uri 'none'; form-action 'none'; object-src 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'sha256-n2oZIlepoxeJOE8tD7QTAlHWwppEjlnVjyYfYEUv0XY='; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob:; media-src 'self' blob: https://pxxggnhgwzkgwwlrkymb.supabase.co; connect-src 'self' https://pxxggnhgwzkgwwlrkymb.supabase.co wss://pxxggnhgwzkgwwlrkymb.supabase.co; base-uri 'none'; form-action 'none'; object-src 'none'">
 <meta name="referrer" content="strict-origin-when-cross-origin">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="robots" content="noindex,nofollow">
@@ -69,11 +69,11 @@ td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
     <input type="email" id="lemail" placeholder="E-mail administrateur" autocomplete="username" required>
     <button class="btn" type="submit">Recevoir un code</button>
     <div class="err" id="lerr1"></div>
-    <p>Un code à 6 chiffres est envoyé à l'adresse, si elle fait partie des administrateurs.</p>
+    <p>Un e-mail avec un code (ou un lien de connexion) est envoyé. Seules les adresses administrateur accèdent aux données.</p>
   </form>
   <form class="login" id="login2" hidden>
     <h2>Code reçu par e-mail</h2>
-    <p>Envoyé à <b id="lto"></b></p>
+    <p>Envoyé à <b id="lto"></b>. Entrez le code, ou cliquez simplement sur le lien reçu.</p>
     <input id="lcode" inputmode="numeric" autocomplete="one-time-code" maxlength="8" placeholder="123456" required>
     <button class="btn" type="submit">Se connecter</button>
     <button class="linkbtn" type="button" id="lback">Changer d'adresse</button>
@@ -137,7 +137,7 @@ td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
 
   $('login1').addEventListener('submit',async e=>{e.preventDefault();$('lerr1').textContent='';
     const em=$('lemail').value.trim();
-    const {error}=await sb.auth.signInWithOtp({email:em,options:{shouldCreateUser:false}});
+    const {error}=await sb.auth.signInWithOtp({email:em,options:{shouldCreateUser:true,emailRedirectTo:location.origin+location.pathname}});
     if(error){$('lerr1').textContent=/rate|seconds/i.test(error.message)?'Patientez un peu avant de redemander un code.':'Envoi impossible pour cette adresse.';return}
     pending=em;$('lto').textContent=em;show('l2');$('lcode').focus()});
   $('login2').addEventListener('submit',async e=>{e.preventDefault();$('lerr2').textContent='';
