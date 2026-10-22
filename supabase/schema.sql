@@ -259,7 +259,7 @@ end $$;
 drop trigger if exists visits_guard on public.visits;
 create trigger visits_guard before insert on public.visits for each row execute function public.visits_guard();
 
--- 4. Parrainage plafonné à 50 filleuls (10 000 crédits) par parrain
+-- 4. Parrainage sans plafond (viralité) : un filleul ne compte qu'une fois, dans les 24 h, jamais soi-même
 create or replace function public.claim_referral(code text) returns int
 language plpgsql security definer set search_path = public as $$
 declare me public.profiles; ref public.profiles;
@@ -268,7 +268,6 @@ begin
   if me.id is null or me.referred_by is not null or me.created_at < now() - interval '1 day' then return 0; end if;
   select * into ref from public.profiles where ref_code = code;
   if ref.id is null or ref.id = me.id then return 0; end if;
-  if (select count(*) from public.profiles where referred_by = ref.id) >= 50 then return 0; end if;
   update public.profiles set referred_by = ref.id, credits_bonus = credits_bonus + 100 where id = me.id;
   update public.profiles set credits_bonus = credits_bonus + 200 where id = ref.id;
   return 100;
