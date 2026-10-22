@@ -1,0 +1,255 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Bastille · Admin</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@600;800&family=Figtree:wght@400;600;800&display=swap">
+<style>
+:root{--ink:#1d1230;--plum:#3a2550;--paper:#fbf3e4;--card:#fffaf1;--line:#e6d6bb;--coral:#ff5a4e;--cobalt:#2f5bff;--sun:#ffb830;--mint:#14b58a;--mute:#7a6d8f;
+  --unb:'Unbounded',system-ui,sans-serif;--sans:'Figtree',system-ui,sans-serif}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font:15px/1.45 var(--sans);padding:0 max(16px,env(safe-area-inset-left,0px)) 40px max(16px,env(safe-area-inset-right,0px))}
+header{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:18px 0 14px;border-bottom:3px solid var(--ink);margin-bottom:18px}
+h1{font:800 20px var(--unb);margin:0;letter-spacing:.02em}h1 span{color:var(--coral)}
+h2{font:600 13px var(--unb);margin:0 0 10px;letter-spacing:.04em;text-transform:uppercase}
+h3{font:600 12px var(--unb);margin:18px 0 8px;letter-spacing:.04em;text-transform:uppercase;color:var(--plum)}
+.wrap{max-width:1100px;margin:0 auto}
+button,select,input{font:inherit}
+.btn{background:var(--ink);color:var(--paper);border:0;border-radius:10px;padding:9px 14px;font-weight:800;cursor:pointer}
+.btn.alt{background:transparent;color:var(--ink);box-shadow:inset 0 0 0 2px var(--ink)}
+.btn:disabled{opacity:.5;cursor:default}
+.linkbtn{background:none;border:0;color:var(--cobalt);text-decoration:underline;cursor:pointer;padding:0;font-size:13px;align-self:flex-start}
+select{padding:8px 10px;border-radius:10px;border:2px solid var(--ink);background:#fff;color:var(--ink)}
+.login{max-width:360px;margin:60px auto;background:var(--card);border:3px solid var(--ink);border-radius:18px;box-shadow:6px 6px 0 var(--ink);padding:22px;display:flex;flex-direction:column;gap:10px}
+.login input{padding:10px 12px;border:2px solid var(--ink);border-radius:10px;background:#fff;color:var(--ink)}
+#lcode{letter-spacing:.3em;text-align:center;font-weight:800}
+.login p{margin:0;color:var(--mute);font-size:13px}
+.err{color:#c62c22;font-weight:700;font-size:13px;min-height:1em}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:18px}
+.kpi{background:var(--card);border:2px solid var(--ink);border-radius:14px;padding:12px 14px}
+.kpi small{display:block;font-size:12px;color:var(--mute);font-weight:600}
+.kpi b{display:block;font:800 24px var(--unb);margin-top:4px;font-variant-numeric:tabular-nums}
+.kpi i{font-style:normal;font-size:12px;color:var(--mute)}
+.grid{display:grid;grid-template-columns:2fr 1fr;gap:14px;margin-bottom:14px}
+.grid.b{grid-template-columns:1fr 1fr}
+@media (max-width:760px){.grid,.grid.b{grid-template-columns:1fr}}
+.panel{background:var(--card);border:2px solid var(--ink);border-radius:14px;padding:14px;min-width:0;margin-bottom:14px}
+.grid .panel{margin-bottom:0}
+.chart{position:relative;height:240px}
+table{width:100%;border-collapse:collapse;font-size:13.5px}
+th,td{text-align:left;padding:7px 8px;border-bottom:1px solid var(--line)}
+th{font-size:12px;color:var(--mute);font-weight:800}
+td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
+.bar{display:inline-block;height:8px;border-radius:4px;background:var(--sun);vertical-align:middle;margin-right:6px}
+.tablewrap{overflow-x:auto;max-height:420px;overflow-y:auto}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.note{font-size:12.5px;color:var(--mute);margin:8px 0 0}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>BASTILLE <span>admin</span></h1>
+    <div class="row" id="bar" hidden>
+      <select id="period" aria-label="Période">
+        <option value="1">Aujourd'hui</option><option value="7">7 jours</option><option value="30" selected>30 jours</option><option value="0">Tout</option>
+      </select>
+      <button class="btn alt" id="refresh">Actualiser</button>
+      <button class="btn alt" id="logout">Déconnexion</button>
+    </div>
+  </header>
+
+  <form class="login" id="login1" hidden>
+    <h2>Connexion administrateur</h2>
+    <input type="email" id="lemail" placeholder="E-mail administrateur" autocomplete="username" required>
+    <button class="btn" type="submit">Recevoir un code</button>
+    <div class="err" id="lerr1"></div>
+    <p>Un code à 6 chiffres est envoyé à l'adresse, si elle fait partie des administrateurs.</p>
+  </form>
+  <form class="login" id="login2" hidden>
+    <h2>Code reçu par e-mail</h2>
+    <p>Envoyé à <b id="lto"></b></p>
+    <input id="lcode" inputmode="numeric" autocomplete="one-time-code" maxlength="8" placeholder="123456" required>
+    <button class="btn" type="submit">Se connecter</button>
+    <button class="linkbtn" type="button" id="lback">Changer d'adresse</button>
+    <div class="err" id="lerr2"></div>
+  </form>
+
+  <div id="cfgmiss" class="panel" hidden><h2>Configuration manquante</h2>Renseignez l'URL et la clé « anon public » de Supabase dans <code>config.js</code>.</div>
+
+  <main id="dash" hidden>
+    <section class="kpis" id="kpis"></section>
+    <div class="grid">
+      <div class="panel"><h2>Activité par jour</h2><div class="chart"><canvas id="cDays"></canvas></div></div>
+      <div class="panel"><h2>Camps joués</h2><div class="chart"><canvas id="cSide"></canvas></div></div>
+    </div>
+
+    <div class="panel">
+      <h2>Qui choisit quoi</h2>
+      <div class="grid b" style="margin:0">
+        <div><h3>Black Bloc · par tenue</h3><div class="tablewrap"><table id="tTenueB"></table></div></div>
+        <div><h3>Police · par tenue</h3><div class="tablewrap"><table id="tTenueP"></table></div></div>
+      </div>
+      <div class="grid b" style="margin:0">
+        <div><h3>Armes de départ</h3><div class="tablewrap"><table id="tArme"></table></div></div>
+        <div><h3>Armes spéciales équipées</h3><div class="tablewrap"><table id="tExo"></table></div></div>
+      </div>
+      <div class="grid b" style="margin:0">
+        <div><h3>Armes ramassées en partie</h3><div class="tablewrap"><table id="tPick"></table></div></div>
+        <div><h3>Bonus achetés</h3><div class="tablewrap"><table id="tPerk"></table></div></div>
+      </div>
+      <p class="note">Score, étape et durée sont des moyennes sur les parties de chaque ligne. Une partie sans information (ancienne version du jeu) apparaît en « Non renseigné ».</p>
+    </div>
+
+    <div class="grid b">
+      <div class="panel"><h2>Étape atteinte</h2><div class="chart"><canvas id="cStage"></canvas></div></div>
+      <div class="panel"><h2>Provenance des visites</h2><div class="tablewrap"><table><thead><tr><th>Source</th><th class="num">Visites</th></tr></thead><tbody id="tRef"></tbody></table></div></div>
+    </div>
+
+    <div class="panel">
+      <div class="row" style="justify-content:space-between;margin-bottom:8px"><h2 style="margin:0">Joueurs inscrits <span id="nMail"></span></h2><button class="btn" id="csv">Exporter CSV</button></div>
+      <div class="tablewrap"><table><thead><tr><th>E-mail</th><th>Newsletter</th><th class="num">Filleuls</th><th class="num">Crédits</th><th class="num">Parties</th><th>Inscription</th></tr></thead><tbody id="tMail"></tbody></table></div>
+      <p class="note">Chaque adresse a été vérifiée par un code. N'utilisez pour la newsletter que les adresses « Oui ». Pour supprimer un joueur : Supabase → Authentication → Users.</p>
+    </div>
+  </main>
+</div>
+<script src="config.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.js"></script>
+<script>
+(function(){
+  const $=id=>document.getElementById(id);
+  const C=window.BT_CONFIG||{};
+  if(!C.url||!C.key||!window.supabase){$('cfgmiss').hidden=false;return}
+  const sb=window.supabase.createClient(C.url,C.key);
+  const fmt=n=>Number(n||0).toLocaleString('fr-FR');
+  const dec=n=>Number(n||0).toFixed(1).replace('.',',');
+  const day=d=>new Date(d).toISOString().slice(0,10);
+  let charts=[],DATA=null,pending='';
+
+  function show(v){$('login1').hidden=v!=='l1';$('login2').hidden=v!=='l2';$('bar').hidden=v!=='d';$('dash').hidden=v!=='d'}
+  async function boot(){const {data}=await sb.auth.getSession();if(data.session){show('d');load()}else show(pending?'l2':'l1')}
+
+  $('login1').addEventListener('submit',async e=>{e.preventDefault();$('lerr1').textContent='';
+    const em=$('lemail').value.trim();
+    const {error}=await sb.auth.signInWithOtp({email:em,options:{shouldCreateUser:false}});
+    if(error){$('lerr1').textContent=/rate|seconds/i.test(error.message)?'Patientez un peu avant de redemander un code.':'Envoi impossible pour cette adresse.';return}
+    pending=em;$('lto').textContent=em;show('l2');$('lcode').focus()});
+  $('login2').addEventListener('submit',async e=>{e.preventDefault();$('lerr2').textContent='';
+    const {error}=await sb.auth.verifyOtp({email:pending,token:$('lcode').value.replace(/\D/g,''),type:'email'});
+    if(error){$('lerr2').textContent='Code incorrect ou expiré.';return}pending='';boot()});
+  $('lback').onclick=()=>{pending='';show('l1')};
+  $('logout').onclick=async()=>{await sb.auth.signOut();DATA=null;boot()};
+  $('refresh').onclick=()=>load();
+  $('period').onchange=()=>render();
+
+  async function fetchAll(table,cols){
+    const rows=[];const step=1000;
+    for(let from=0;from<100000;from+=step){
+      const {data,error}=await sb.from(table).select(cols).order('created_at',{ascending:false}).range(from,from+step-1);
+      if(error)throw error;rows.push(...data);if(data.length<step)break}
+    return rows}
+
+  async function load(){
+    $('kpis').innerHTML='<div class="kpi"><small>Chargement…</small></div>';
+    try{
+      const {data:adm}=await sb.from('admins').select('email').limit(1);
+      if(!adm||!adm.length)throw new Error('Ce compte n\'est pas administrateur.');
+      const [visits,games,profiles]=await Promise.all([
+        fetchAll('visits','visitor,referrer,device,ref,created_at'),
+        fetchAll('games','visitor,user_id,side,score,stage,bosses,duration_s,device,tenue,arme,exo,picked,perks,clip,mailed_at,created_at'),
+        fetchAll('profiles','id,email,news_consent,ref_code,referred_by,credits_bonus,created_at')]);
+      DATA={visits,games,profiles};render();
+    }catch(err){$('kpis').innerHTML='<div class="kpi"><small>Accès refusé ou erreur</small><i></i></div>';$('kpis').querySelector('i').textContent=err.message||String(err)}
+  }
+
+  function inPeriod(rows){const p=+$('period').value;if(!p)return rows;const t0=new Date();t0.setHours(0,0,0,0);t0.setDate(t0.getDate()-(p-1));return rows.filter(r=>new Date(r.created_at)>=t0)}
+  const avg=(a,k)=>a.length?a.reduce((s,x)=>s+(+x[k]||0),0)/a.length:0;
+
+  function breakdown(el,rows,keyFn,{scoreUnit='',showScore=true}={}){
+    const groups={};rows.forEach(r=>{const ks=[].concat(keyFn(r));ks.forEach(k=>{k=k||'Non renseigné';(groups[k]=groups[k]||[]).push(r)})});
+    const total=rows.length||1,list=Object.entries(groups).sort((a,b)=>b[1].length-a[1].length);
+    const t=$(el);t.textContent='';
+    const hd=document.createElement('thead');hd.innerHTML='<tr><th></th><th class="num">Parties</th><th class="num">Part</th>'+(showScore?'<th class="num">Score moy.</th>':'')+'<th class="num">Étape moy.</th><th class="num">Durée moy.</th></tr>';t.appendChild(hd);
+    const tb=document.createElement('tbody');
+    if(!list.length){const tr=document.createElement('tr');const td=document.createElement('td');td.colSpan=6;td.textContent='Aucune partie sur la période';td.style.color='#7a6d8f';tr.appendChild(td);tb.appendChild(tr)}
+    list.forEach(([k,g])=>{const tr=document.createElement('tr');
+      const c=(txt,cls)=>{const td=document.createElement('td');if(cls)td.className=cls;td.textContent=txt;tr.appendChild(td);return td};
+      c(k);c(fmt(g.length),'num');const pc=Math.round(g.length/total*100);const p=c('','num');const bar=document.createElement('span');bar.className='bar';bar.style.width=Math.max(2,pc*.6)+'px';p.append(bar,document.createTextNode(pc+' %'));
+      if(showScore)c(fmt(Math.round(avg(g,'score')))+scoreUnit,'num');c(dec(avg(g,'stage')),'num');c(Math.round(avg(g,'duration_s'))+' s','num');tb.appendChild(tr)});
+    t.appendChild(tb);
+  }
+
+  function render(){
+    if(!DATA)return;
+    const V=inPeriod(DATA.visits),G=inPeriod(DATA.games),P=inPeriod(DATA.profiles);
+    const uv=new Set(V.map(v=>v.visitor)).size,up=new Set(G.map(g=>g.visitor)).size;
+    const bl=G.filter(g=>g.side==='bloc'),po=G.filter(g=>g.side==='police');
+    const mob=V.length?V.filter(v=>v.device==='mobile').length/V.length:0;
+    const refs=P.filter(p=>p.referred_by).length,clips=G.filter(g=>g.clip).length,mailed=G.filter(g=>g.mailed_at).length;
+    const k=[
+      ['Visiteurs uniques',fmt(uv),fmt(V.length)+' visites'],
+      ['Joueurs',fmt(up),uv?Math.round(up/uv*100)+' % des visiteurs':''],
+      ['Parties jouées',fmt(G.length),up?dec(G.length/up)+' par joueur':''],
+      ['Comptes vérifiés',fmt(P.length),up?Math.round(P.length/up*100)+' % des joueurs':''],
+      ['Newsletter',fmt(P.filter(p=>p.news_consent).length),'inscrits ayant accepté'],
+      ['Parrainages',fmt(refs),'amis venus par un lien'],
+      ['Vidéos en ligne',fmt(clips),fmt(mailed)+' e-mails de score'],
+      ['Black Bloc / Police',(G.length?Math.round(bl.length/G.length*100):0)+' / '+(G.length?Math.round(po.length/G.length*100):0)+' %',fmt(bl.length)+' / '+fmt(po.length)+' parties'],
+      ['Étape moyenne',dec(avg(G,'stage')),'boss vaincus : '+fmt(G.reduce((s,g)=>s+g.bosses,0))],
+      ['Durée moyenne',Math.round(avg(G,'duration_s'))+' s','par partie'],
+      ['Sur mobile',Math.round(mob*100)+' %','des visites']];
+    $('kpis').innerHTML='';k.forEach(x=>{const d=document.createElement('div');d.className='kpi';const s=document.createElement('small');s.textContent=x[0];const b=document.createElement('b');b.textContent=x[1];const i=document.createElement('i');i.textContent=x[2];d.append(s,b,i);$('kpis').appendChild(d)});
+
+    breakdown('tTenueB',bl,g=>g.tenue,{scoreUnit:' €'});
+    breakdown('tTenueP',po,g=>g.tenue);
+    breakdown('tArme',G,g=>(g.arme||'')&&(g.side==='bloc'?'Black Bloc · ':'Police · ')+g.arme,{showScore:false});
+    breakdown('tExo',G,g=>g.exo?(g.side==='bloc'?'Black Bloc · ':'Police · ')+g.exo:'Aucune',{showScore:false});
+    breakdown('tPick',G.filter(g=>g.picked),g=>g.picked.split(', ').map(x=>(g.side==='bloc'?'Black Bloc · ':'Police · ')+x),{showScore:false});
+    breakdown('tPerk',G.filter(g=>g.perks),g=>g.perks.split(', '),{showScore:false});
+
+    charts.forEach(c=>c.destroy());charts=[];
+    const p=+$('period').value,days=[];const d0=new Date();d0.setHours(0,0,0,0);
+    const oldest=Math.min(Date.now(),...DATA.visits.concat(DATA.games).map(r=>+new Date(r.created_at)));
+    const span=p||Math.max(7,Math.min(90,Math.ceil((Date.now()-oldest)/864e5)+1));
+    for(let i=span-1;i>=0;i--){const d=new Date(d0);d.setDate(d.getDate()-i);days.push(day(d))}
+    const cnt=rows=>{const m={};rows.forEach(r=>{const kk=day(r.created_at);m[kk]=(m[kk]||0)+1});return days.map(d=>m[d]||0)};
+    const lab=days.map(d=>d.slice(8,10)+'/'+d.slice(5,7));
+    Chart.defaults.font.family="'Figtree',system-ui,sans-serif";Chart.defaults.color='#3a2550';
+    charts.push(new Chart($('cDays'),{type:'line',data:{labels:lab,datasets:[
+      {label:'Visites',data:cnt(V),borderColor:'#2f5bff',backgroundColor:'#2f5bff',tension:.25,pointRadius:2},
+      {label:'Parties',data:cnt(G),borderColor:'#ff5a4e',backgroundColor:'#ff5a4e',tension:.25,pointRadius:2},
+      {label:'Comptes',data:cnt(P),borderColor:'#14b58a',backgroundColor:'#14b58a',tension:.25,pointRadius:2}]},
+      options:{maintainAspectRatio:false,interaction:{mode:'index',intersect:false},plugins:{legend:{position:'bottom'}},scales:{y:{beginAtZero:true,ticks:{precision:0}}}}}));
+    charts.push(new Chart($('cSide'),{type:'doughnut',data:{labels:['Black Bloc','Police'],datasets:[{data:[bl.length,po.length],backgroundColor:['#1d1230','#2f5bff'],borderColor:'#fffaf1',borderWidth:3}]},options:{maintainAspectRatio:false,plugins:{legend:{position:'bottom'}}}}));
+    const maxSt=Math.max(4,...G.map(g=>g.stage));const st=Array.from({length:Math.min(12,maxSt)},(_,i)=>G.filter(g=>Math.min(12,g.stage)===i+1).length);
+    charts.push(new Chart($('cStage'),{type:'bar',data:{labels:st.map((_,i)=>i===11?'12+':'Étape '+(i+1)),datasets:[
+      {label:'Black Bloc',data:st.map((_,i)=>bl.filter(g=>Math.min(12,g.stage)===i+1).length),backgroundColor:'#1d1230'},
+      {label:'Police',data:st.map((_,i)=>po.filter(g=>Math.min(12,g.stage)===i+1).length),backgroundColor:'#2f5bff'}]},
+      options:{maintainAspectRatio:false,plugins:{legend:{position:'bottom'}},scales:{x:{stacked:true},y:{stacked:true,beginAtZero:true,ticks:{precision:0}}}}}));
+
+    const refsrc={};V.forEach(v=>{const r=v.ref?'Lien de parrainage':(v.referrer||'Accès direct');refsrc[r]=(refsrc[r]||0)+1});
+    const tr=$('tRef');tr.textContent='';Object.entries(refsrc).sort((a,b)=>b[1]-a[1]).slice(0,30).forEach(([r,n])=>{const t=document.createElement('tr');const a=document.createElement('td');a.textContent=r;const b=document.createElement('td');b.className='num';b.textContent=fmt(n);t.append(a,b);tr.appendChild(t)});
+
+    const kids={},plays={};DATA.profiles.forEach(x=>{if(x.referred_by)kids[x.referred_by]=(kids[x.referred_by]||0)+1});DATA.games.forEach(g=>{if(g.user_id)plays[g.user_id]=(plays[g.user_id]||0)+1});
+    $('nMail').textContent='('+fmt(DATA.profiles.length)+' au total)';
+    const tm=$('tMail');tm.textContent='';
+    DATA.profiles.forEach(pl=>{const t=document.createElement('tr');
+      const c=(txt,cls)=>{const td=document.createElement('td');if(cls)td.className=cls;td.textContent=txt;t.appendChild(td)};
+      c(pl.email);c(pl.news_consent?'Oui':'Non');c(fmt(kids[pl.id]),'num');c(fmt(pl.credits_bonus),'num');c(fmt(plays[pl.id]),'num');
+      c(new Date(pl.created_at).toLocaleString('fr-FR',{dateStyle:'short',timeStyle:'short'}));tm.appendChild(t)});
+  }
+
+  $('csv').onclick=()=>{if(!DATA)return;const esc=v=>'"'+String(v??'').replace(/"/g,'""')+'"';
+    const kids={};DATA.profiles.forEach(x=>{if(x.referred_by)kids[x.referred_by]=(kids[x.referred_by]||0)+1});
+    const lines=['email;newsletter;filleuls;credits;inscription'].concat(DATA.profiles.map(p=>[p.email,p.news_consent?'oui':'non',kids[p.id]||0,p.credits_bonus||0,new Date(p.created_at).toISOString()].map(esc).join(';')));
+    const blob=new Blob(['﻿'+lines.join('\n')],{type:'text/csv;charset=utf-8'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='bastille-joueurs-'+day(Date.now())+'.csv';document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},500)};
+
+  boot();
+})();
+</script>
+</body>
+</html>

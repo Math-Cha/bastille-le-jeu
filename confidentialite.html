@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Bastille · Confidentialité</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@800&family=Figtree:wght@400;700&display=swap">
+<style>
+:root{--ink:#1d1230;--paper:#fbf3e4;--coral:#ff5a4e;--mute:#6d6182}
+body{margin:0;background:var(--paper);color:var(--ink);font:16px/1.6 'Figtree',system-ui,sans-serif;padding:32px max(16px,env(safe-area-inset-left,0px)) 48px max(16px,env(safe-area-inset-right,0px))}
+main{max-width:66ch;margin:0 auto}
+h1{font:800 26px 'Unbounded',system-ui,sans-serif;margin:0 0 6px}h1 span{color:var(--coral)}
+h2{font-size:17px;margin:26px 0 6px}
+p,li{color:#2b2140}small{color:var(--mute)}
+a{color:#2f5bff}
+</style>
+</head>
+<body>
+<main>
+<h1>BASTILLE <span>·</span> Confidentialité</h1>
+<small>Dernière mise à jour : octobre 2026</small>
+
+<h2>Ce que nous collectons</h2>
+<ul>
+<li><b>Statistiques de jeu anonymes</b> : un identifiant aléatoire stocké dans votre navigateur, le camp, la tenue et les armes choisies, le score, l'étape atteinte, la durée de la partie, le type d'appareil (mobile ou ordinateur) et le site d'où vous venez.</li>
+<li><b>Votre adresse e-mail</b>, uniquement si vous la donnez pour recevoir votre score. Elle est vérifiée par un code à 6 chiffres et crée un compte joueur.</li>
+<li><b>La vidéo des 20 dernières secondes de votre partie</b> (images du jeu uniquement, sans caméra ni micro), mise en ligne seulement si vous demandez l'envoi de votre score par e-mail. Elle est accessible publiquement à toute personne qui a son lien.</li>
+<li><b>Le parrainage</b> : le compte qui vous a invité et les crédits gagnés.</li>
+</ul>
+
+<h2>Pourquoi</h2>
+<p>Les statistiques servent à améliorer le jeu (difficulté, choix des joueurs). L'adresse e-mail sert à vous envoyer votre score et votre vidéo quand vous le demandez, et les nouveautés du jeu seulement si vous avez coché la case correspondante. Elle n'est ni vendue ni transmise à des tiers.</p>
+
+<h2>Durée de conservation</h2>
+<p>Votre compte et votre adresse sont conservés jusqu'à votre demande de suppression, et au plus 3 ans après votre dernière partie. Les vidéos sont conservées au plus 12 mois. Les statistiques anonymes sont conservées au plus 25 mois.</p>
+
+<h2>Hébergement et prestataires</h2>
+<p>Le site est hébergé par GitHub Pages. Les données et les vidéos sont stockées chez Supabase, dans l'Union européenne (Paris). Les e-mails sont envoyés par Brevo (France).</p>
+
+<h2>Vos droits</h2>
+<p>Vous pouvez demander l'accès à vos données, leur rectification ou leur suppression, et vous désinscrire à tout moment, en écrivant à : <b id="contact">l'éditeur du site</b>. Vous pouvez aussi adresser une réclamation à la <a href="https://www.cnil.fr" target="_blank" rel="noopener">CNIL</a>.</p>
+
+<h2>Le jeu</h2>
+<p>BASTILLE est une œuvre satirique et fictive. Les personnages, enseignes et situations sont inventés.</p>
+
+<p><a href="./">← Retour au jeu</a></p>
+</main>
+<script src="config.js"></script>
+<script>const c=(window.BT_CONFIG||{}).contact;if(c){document.getElementById('contact').textContent=c}</script>
+</body>
+</html>
