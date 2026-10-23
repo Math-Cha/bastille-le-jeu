@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'sha256-qvNjeEtYfDtKE8nDtT+rbaWP1WL2vEU7VRk0A8FrWA4='; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob:; media-src 'self' blob: https://pxxggnhgwzkgwwlrkymb.supabase.co; connect-src 'self' https://pxxggnhgwzkgwwlrkymb.supabase.co wss://pxxggnhgwzkgwwlrkymb.supabase.co; base-uri 'none'; form-action 'none'; object-src 'none'">
+<meta name="referrer" content="strict-origin-when-cross-origin">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Bastille · Scores</title>
+<meta name="description" content="Classement des meilleurs joueurs de BASTILLE et mur des joueurs.">
+<meta property="og:title" content="BASTILLE — classement et mur des joueurs">
+<meta name="theme-color" content="#1d1230">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@700;900&family=Figtree:wght@400;600;800&family=Silkscreen&display=swap">
+<style>
+:root{--ink:#1d1230;--plum:#3a2550;--paper:#fbf3e4;--card:#fffaf1;--line:#e6d6bb;--coral:#ff5a4e;--coral2:#d93b33;--cobalt:#2f5bff;--sun:#ffb830;--mint:#2ee6b0;--mint2:#14b58a;--mute:#6d6182;
+  --unb:'Unbounded',system-ui,sans-serif;--sans:'Figtree',system-ui,sans-serif;--pix:'Silkscreen',monospace}
+*{box-sizing:border-box}
+body{margin:0;background:var(--ink);color:var(--paper);font:15px/1.45 var(--sans);padding:0 max(16px,env(safe-area-inset-left,0px)) 48px max(16px,env(safe-area-inset-right,0px))}
+.wrap{max-width:720px;margin:0 auto}
+header{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:20px 0 14px}
+h1{font:900 26px var(--unb);color:var(--sun);margin:0;letter-spacing:.02em}
+h1 small{display:block;font:600 13px var(--sans);color:var(--paper);letter-spacing:0;margin-top:2px}
+h2{font:700 15px var(--unb);margin:0 0 12px;letter-spacing:.03em}
+.btn{display:inline-block;background:var(--sun);color:var(--ink);font:800 13px var(--unb);padding:10px 16px;border-radius:12px;border:0;text-decoration:none;cursor:pointer;box-shadow:3px 3px 0 var(--paper)}
+.btn:disabled{opacity:.5;cursor:default}
+.panel{background:var(--card);color:var(--ink);border:3px solid var(--ink);border-radius:18px;box-shadow:6px 6px 0 var(--coral);padding:16px;margin-bottom:22px}
+.panel.mint{box-shadow:6px 6px 0 var(--mint)}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+.tabs button{font:700 11px var(--pix);letter-spacing:.05em;padding:7px 10px;border-radius:10px;border:2px solid var(--ink);background:transparent;color:var(--ink);cursor:pointer}
+.tabs button.on{background:var(--ink);color:var(--paper)}
+ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
+#rank li{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:12px;background:#fff;border:2px solid var(--line)}
+#rank li.me{border-color:var(--mint2)}
+#rank b{font:700 13px var(--pix);min-width:34px}
+#rank div{flex:1;min-width:0;display:flex;flex-direction:column}
+#rank span{font-weight:800;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#rank small{color:var(--mute);font-size:12px}
+#rank em{font:700 13px var(--pix);font-style:normal;white-space:nowrap}
+.empty{color:var(--mute);text-align:center;padding:10px}
+#me{margin:10px 0 0;font-size:13px;color:var(--plum)}
+form{display:flex;flex-direction:column;gap:8px;margin-bottom:14px}
+textarea{font:16px/1.4 var(--sans);padding:10px 12px;border:2px solid var(--ink);border-radius:12px;resize:vertical;min-height:72px;background:#fff;color:var(--ink)}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;justify-content:space-between}
+select{font:14px var(--sans);padding:7px 9px;border:2px solid var(--ink);border-radius:10px;background:#fff;color:var(--ink)}
+#count{font-size:12px;color:var(--mute)}
+#msg{font-size:13px;font-weight:700;min-height:1em}
+#msg.err{color:var(--coral2)}#msg.ok{color:var(--mint2)}
+#info{font-size:13.5px;color:var(--plum);background:#f6ead3;border-radius:12px;padding:10px 12px;margin:0 0 14px}
+#wall li{padding:10px 12px;border-radius:12px;background:#fff;border:2px solid var(--line)}
+#wall .head{display:flex;gap:8px;align-items:baseline;flex-wrap:wrap;font-size:12.5px;color:var(--mute)}
+#wall .who{font-weight:800;color:var(--ink);font-size:14px}
+#wall .tag{font:700 10px var(--pix);padding:2px 6px;border-radius:6px;background:var(--ink);color:var(--paper)}
+#wall .tag.police{background:var(--cobalt)}
+#wall p{margin:6px 0 4px;white-space:pre-wrap;word-wrap:break-word;overflow-wrap:anywhere}
+#wall .act{display:flex;gap:12px}
+.link{background:none;border:0;padding:0;font:600 12px var(--sans);color:var(--mute);text-decoration:underline;cursor:pointer}
+.link.done{text-decoration:none;cursor:default}
+#more{margin-top:12px}
+footer{font-size:12px;color:#c9bfd6;text-align:center;margin-top:18px}
+footer a{color:#c9bfd6}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>BASTILLE<small>Classement et mur des joueurs</small></h1>
+    <a class="btn" href="./">JOUER</a>
+  </header>
+
+  <section class="panel">
+    <h2>Meilleurs joueurs</h2>
+    <div class="tabs" id="tSide"><button type="button" data-v="bloc">BLACK BLOC</button><button type="button" data-v="police">POLICE</button></div>
+    <div class="tabs" id="tPer"><button type="button" data-v="day">AUJOURD'HUI</button><button type="button" data-v="week">7 JOURS</button><button type="button" data-v="all">TOUJOURS</button></div>
+    <ol id="rank"></ol>
+    <p id="me"></p>
+  </section>
+
+  <section class="panel mint">
+    <h2>Le mur des joueurs</h2>
+    <p id="info"></p>
+    <form id="post" hidden novalidate>
+      <textarea id="body" maxlength="280" placeholder="Ton message pour les autres joueurs (280 caractères, sans lien)" aria-label="Ton message"></textarea>
+      <div class="row">
+        <label>Camp <select id="side"><option value="">—</option><option value="bloc">Black Bloc</option><option value="police">Police</option></select></label>
+        <span id="count">0 / 280</span>
+        <button class="btn" type="submit" id="send">PUBLIER</button>
+      </div>
+      <span id="msg" aria-live="polite"></span>
+    </form>
+    <ol id="wall"></ol>
+    <button class="btn" id="more" type="button" hidden>VOIR PLUS</button>
+  </section>
+
+  <footer>Les messages sont publics et modérés. Insultes, propos haineux, menaces et liens sont interdits. <a href="confidentialite.html">Confidentialité</a></footer>
+</div>
+<script src="config.js"></script>
+<script src="vendor/supabase-2.45.4.js"></script>
+<script>
+(function(){
+  const $=id=>document.getElementById(id);
+  const C=window.BT_CONFIG||{};
+  const sb=(C.url&&C.key&&window.supabase)?window.supabase.createClient(C.url,C.key,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}}):null;
+  const fmt=(side,n)=>Number(n||0).toLocaleString('fr-FR')+(side==='bloc'?' €':'');
+  const ago=d=>{const s=(Date.now()-new Date(d))/1000;if(s<60)return 'à l\'instant';if(s<3600)return 'il y a '+Math.floor(s/60)+' min';if(s<86400)return 'il y a '+Math.floor(s/3600)+' h';return new Date(d).toLocaleDateString('fr-FR',{day:'numeric',month:'short'})};
+  const el=(tag,cls,txt)=>{const e=document.createElement(tag);if(cls)e.className=cls;if(txt!=null)e.textContent=txt;return e};
+  let RK={side:'bloc',per:'week'},user=null,oldest=null,myPseudo='';
+  try{const q=new URLSearchParams(location.search);if(q.get('side')==='police')RK.side='police'}catch(e){}
+
+  async function loadRank(){
+    document.querySelectorAll('#tSide button').forEach(b=>b.classList.toggle('on',b.dataset.v===RK.side));
+    document.querySelectorAll('#tPer button').forEach(b=>b.classList.toggle('on',b.dataset.v===RK.per));
+    const list=$('rank');list.textContent='';$('me').textContent='';
+    if(!sb){list.appendChild(el('li','empty','Classement indisponible pour le moment.'));return}
+    list.appendChild(el('li','empty','Chargement…'));
+    const {data,error}=await sb.rpc('leaderboard',{p_side:RK.side,p_period:RK.per});
+    list.textContent='';
+    if(error||!data||!data.length){list.appendChild(el('li','empty',error?'Classement indisponible pour le moment.':'Personne encore sur cette période. À toi !'))}
+    else data.forEach(r=>{const li=el('li',r.pseudo===myPseudo?'me':'');const mid=el('div');mid.append(el('span','',r.pseudo),el('small','',(r.tenue?r.tenue+' · ':'')+'étape '+r.stage));li.append(el('b','','#'+r.rank),mid,el('em','',fmt(RK.side,r.score)));list.appendChild(li)});
+    if(user){const {data:m}=await sb.rpc('my_rank',{p_side:RK.side,p_period:RK.per});const r=m&&m[0];$('me').textContent=r?'Toi ('+(r.pseudo||'')+') : #'+r.rank+' sur '+r.total+' · '+fmt(RK.side,r.score):'Tu n\'as pas encore de partie classée sur cette période.'}
+  }
+
+  function renderMsg(c){
+    const li=el('li');const head=el('div','head');head.append(el('span','who',c.pseudo||'Joueur'));
+    if(c.side)head.append(el('span','tag '+c.side,c.side==='bloc'?'BLACK BLOC':'POLICE'));
+    if(c.best)head.append(el('span','','record '+fmt(c.side||'bloc',c.best)));
+    head.append(el('span','',ago(c.created_at)));
+    li.append(head,el('p','',c.body));
+    const act=el('div','act');
+    if(user&&c.mine){const d=el('button','link','Supprimer');d.type='button';d.onclick=async()=>{if(d.dataset.c!=='1'){d.dataset.c='1';d.textContent='Confirmer ?';setTimeout(()=>{d.dataset.c='';d.textContent='Supprimer'},4000);return}const {error}=await sb.rpc('delete_my_comment',{p_id:c.id});if(!error)li.remove()};act.append(d)}
+    else if(user){const r=el('button','link','Signaler');r.type='button';r.onclick=async()=>{r.disabled=true;const {error}=await sb.rpc('report_comment',{p_id:c.id});r.textContent=error?'Erreur':'Signalé, merci';r.className='link done'};act.append(r)}
+    if(act.childNodes.length)li.append(act);
+    return li;
+  }
+  async function loadWall(more){
+    const wall=$('wall');if(!more){wall.textContent='';oldest=null}
+    if(!sb){wall.appendChild(el('li','empty','Mur indisponible pour le moment.'));return}
+    const {data,error}=await sb.rpc('wall',{p_before:more?oldest:null,p_limit:30});
+    if(error){wall.appendChild(el('li','empty','Mur indisponible pour le moment.'));return}
+    if(!more&&!data.length)wall.appendChild(el('li','empty','Aucun message pour l\'instant. Lance la discussion !'));
+    data.forEach(c=>wall.appendChild(renderMsg(c)));
+    if(data.length)oldest=data[data.length-1].created_at;
+    $('more').hidden=data.length<30;
+  }
+
+  const ERR={auth:'Connecte-toi d\'abord.',banned:'Ton compte ne peut plus publier.',length:'Message trop court ou trop long (2 à 280 caractères).',link:'Les liens et les mentions ne sont pas autorisés.',banned_term:'Ce message contient un terme interdit (insulte, haine ou menace).',rate_limited:'Doucement : un message toutes les 30 secondes, 20 par jour.'};
+  function wireForm(){
+    const f=$('post'),b=$('body');
+    b.addEventListener('input',()=>{$('count').textContent=b.value.length+' / 280'});
+    f.addEventListener('submit',async ev=>{ev.preventDefault();const msg=$('msg');
+      const txt=b.value.trim();if(txt.length<2){msg.textContent=ERR.length;msg.className='err';return}
+      $('send').disabled=true;msg.textContent='Publication…';msg.className='';
+      const {error}=await sb.rpc('post_comment',{p_body:txt,p_side:$('side').value||null});
+      $('send').disabled=false;
+      if(error){const em=(error.message||'').trim();const k=ERR[em]?em:Object.keys(ERR).sort((x,y)=>y.length-x.length).find(x=>em.includes(x));msg.textContent=k?ERR[k]:'Publication impossible pour le moment.';msg.className='err';return}
+      b.value='';$('count').textContent='0 / 280';msg.textContent='Publié !';msg.className='ok';loadWall(false);
+    });
+  }
+
+  async function boot(){
+    document.querySelectorAll('#tSide button').forEach(b=>b.onclick=()=>{RK.side=b.dataset.v;loadRank()});
+    document.querySelectorAll('#tPer button').forEach(b=>b.onclick=()=>{RK.per=b.dataset.v;loadRank()});
+    $('more').onclick=()=>loadWall(true);
+    if(sb){const {data}=await sb.auth.getSession();user=data.session?data.session.user:null}
+    if(user){try{const {data:p}=await sb.from('profiles').select('pseudo').eq('id',user.id).maybeSingle();myPseudo=(p&&p.pseudo)||''}catch(e){}}
+    if(user&&C.mail){$('post').hidden=false;$('info').textContent='Tu écris en tant que « '+(myPseudo||'joueur')+' ». Messages publics et modérés : pas d\'insulte, de haine, de menace ni de lien.';wireForm()}
+    else if(C.mail){$('info').textContent='Pour écrire sur le mur, joue une partie puis reçois ton score par e-mail : ton compte sera créé avec un pseudo.'}
+    else{$('info').textContent='L\'écriture sur le mur ouvre très bientôt. En attendant, lis les messages et grimpe au classement !'}
+    loadRank();loadWall(false);
+  }
+  boot();
+})();
+</script>
+</body>
+</html>

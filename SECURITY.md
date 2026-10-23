@@ -9,6 +9,7 @@ Principe : **le navigateur n'est jamais digne de confiance**. Tout contrôle d'a
 | Visites (identifiant aléatoire, appareil, site d'origine) | `visits` | administrateur | 25 mois |
 | Parties (score, étape, tenue, armes, durée) | `games` | le joueur (les siennes), administrateur | 25 mois |
 | E-mail vérifié, pseudo, consentement newsletter, parrainage | `profiles` + `auth.users` | le joueur (le sien), administrateur | jusqu'à suppression, 3 ans max |
+| Messages du mur (texte, camp) | `comments` | public via `wall()` (pseudo, jamais l'e-mail), administrateur | jusqu'à suppression par l'auteur, l'admin ou avec le compte |
 | Vidéo des 20 dernières secondes | stockage `clips` (public par lien) | toute personne ayant le lien | 12 mois |
 
 Aucune donnée bancaire, aucun mot de passe (connexion par code à usage unique), aucune géolocalisation, aucun traceur publicitaire.
@@ -23,6 +24,7 @@ Aucune donnée bancaire, aucun mot de passe (connexion par code à usage unique)
 - **Vidéos** : dépôt seulement par un joueur connecté, pour sa propre partie récente, 15 Mo max, MP4/WebM uniquement.
 - **Fonction e-mail** : jeton du joueur vérifié, origine du site obligatoire, corps limité à 2 Ko, contenu échappé, partie appartenant au joueur, envoi unique par partie.
 - **Pages** : Content-Security-Policy stricte (scripts autorisés par empreinte SHA-256, connexions limitées au projet Supabase), aucune ressource tierce hormis Google Fonts, bibliothèques hébergées sur le site (pas de CDN), affichage des données uniquement via `textContent` (pas d'injection HTML), `referrer` limité, page admin non indexée.
+- **Mur des joueurs** : écriture réservée aux joueurs vérifiés non exclus, via une fonction contrôlée (2–280 caractères, caractères de contrôle retirés, aucun lien ni mention, termes interdits normalisés — accents, majuscules, chiffres « leet », lettres répétées —, 1 message / 30 s et 20 / jour) ; lecture publique uniquement par `wall()` ; signalement unique par joueur, masquage automatique à 3 signalements ; modération admin (masquer, réafficher, supprimer, ajouter un terme). Obligation d'hébergeur (LCEN) : retirer promptement un contenu illicite signalé.
 - **Droit à l'effacement** : bouton « Supprimer mon compte » dans le jeu (profil, accès et vidéos effacés, parties anonymisées).
 
 ## Risques résiduels (assumés et suivis)

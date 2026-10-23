@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
 <meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'sha256-n2oZIlepoxeJOE8tD7QTAlHWwppEjlnVjyYfYEUv0XY='; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob:; media-src 'self' blob: https://pxxggnhgwzkgwwlrkymb.supabase.co; connect-src 'self' https://pxxggnhgwzkgwwlrkymb.supabase.co wss://pxxggnhgwzkgwwlrkymb.supabase.co; base-uri 'none'; form-action 'none'; object-src 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'sha256-EEoNB7JJXga6QOmG9keyj8W72AN4gXIa/hTDLPgDpBs='; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob:; media-src 'self' blob: https://pxxggnhgwzkgwwlrkymb.supabase.co; connect-src 'self' https://pxxggnhgwzkgwwlrkymb.supabase.co wss://pxxggnhgwzkgwwlrkymb.supabase.co; base-uri 'none'; form-action 'none'; object-src 'none'">
 <meta name="referrer" content="strict-origin-when-cross-origin">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="robots" content="noindex,nofollow">
@@ -116,6 +116,12 @@ td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
       <div class="tablewrap"><table><thead><tr><th>E-mail</th><th>Pseudo</th><th>Newsletter</th><th class="num">Filleuls</th><th class="num">Crédits</th><th class="num">Parties</th><th class="num">Record</th><th>Inscription</th><th>Classement</th></tr></thead><tbody id="tMail"></tbody></table></div>
       <p class="note">Chaque adresse a été vérifiée par un code. N'utilisez pour la newsletter que les adresses « Oui ». « Exclure » retire un joueur du classement (score suspect) sans supprimer ses données. Le joueur peut supprimer lui-même son compte depuis le jeu ; sinon : Supabase → Authentication → Users.</p>
     </div>
+    <div class="panel" id="modp">
+      <div class="row" style="justify-content:space-between;margin-bottom:8px"><h2 style="margin:0">Modération du mur <span id="nCom"></span></h2>
+        <form class="row" id="termf" style="gap:6px"><input id="term" placeholder="Ajouter un terme interdit" maxlength="40" style="padding:7px 9px;border:2px solid var(--ink);border-radius:10px"><button class="btn alt" type="submit">Ajouter</button></form></div>
+      <div class="tablewrap"><table><thead><tr><th>Message</th><th>Auteur</th><th class="num">Signal.</th><th>État</th><th>Date</th><th>Actions</th></tr></thead><tbody id="tCom"></tbody></table></div>
+      <p class="note">Les messages signalés apparaissent en premier ; à 3 signalements ils sont masqués automatiquement. « Exclure » un joueur (tableau ci-dessus) l'empêche aussi d'écrire.</p>
+    </div>
   </main>
 </div>
 <script src="config.js"></script>
@@ -164,7 +170,8 @@ td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
         fetchAll('visits','visitor,referrer,device,ref,created_at'),
         fetchAll('games','visitor,user_id,side,score,stage,bosses,duration_s,device,tenue,arme,exo,picked,perks,clip,mailed_at,created_at'),
         fetchAll('profiles','id,email,pseudo,banned,news_consent,ref_code,referred_by,credits_bonus,created_at')]);
-      DATA={visits,games,profiles};render();
+      const {data:comments}=await sb.from('comments').select('id,user_id,body,side,hidden,reports,created_at').order('created_at',{ascending:false}).limit(300);
+      DATA={visits,games,profiles,comments:comments||[]};render();renderMod();
     }catch(err){$('kpis').innerHTML='<div class="kpi"><small>Accès refusé ou erreur</small><i></i></div>';$('kpis').querySelector('i').textContent=err.message||String(err)}
   }
 
@@ -248,6 +255,27 @@ td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
       bt.onclick=async()=>{bt.disabled=true;const {error}=await sb.rpc('admin_set_banned',{uid:pl.id,ban:!pl.banned});if(!error){pl.banned=!pl.banned;render()}else{bt.textContent='Erreur';bt.disabled=false}};
       td.appendChild(bt);t.appendChild(td);tm.appendChild(t)});
   }
+
+  function renderMod(){
+    if(!DATA)return;const ps={};DATA.profiles.forEach(p=>ps[p.id]=p.pseudo||p.email);
+    const list=DATA.comments.slice().sort((a,b)=>(b.reports-a.reports)||(new Date(b.created_at)-new Date(a.created_at)));
+    $('nCom').textContent='('+DATA.comments.length+' messages, '+DATA.comments.filter(c=>c.hidden).length+' masqués)';
+    const tb=$('tCom');tb.textContent='';
+    list.forEach(c=>{const t=document.createElement('tr');if(c.hidden)t.style.opacity='.6';
+      const td=(txt,cls)=>{const x=document.createElement('td');if(cls)x.className=cls;x.textContent=txt;t.appendChild(x);return x};
+      const m=td(c.body);m.style.maxWidth='360px';m.style.whiteSpace='pre-wrap';m.style.overflowWrap='anywhere';
+      td(ps[c.user_id]||'—');td(String(c.reports),'num');td(c.hidden?'Masqué':'Visible');td(new Date(c.created_at).toLocaleString('fr-FR',{dateStyle:'short',timeStyle:'short'}));
+      const a=document.createElement('td');a.style.whiteSpace='nowrap';
+      const mk=(label,action)=>{const b=document.createElement('button');b.className='btn alt';b.style.cssText='padding:3px 8px;font-size:12px;margin-right:4px';b.textContent=label;
+        b.onclick=async()=>{if(action==='delete'&&b.dataset.c!=='1'){b.dataset.c='1';b.textContent='Confirmer ?';setTimeout(()=>{b.dataset.c='';b.textContent=label},3000);return}
+          b.disabled=true;const {error}=await sb.rpc('admin_moderate_comment',{p_id:c.id,p_action:action});
+          if(error){b.textContent='Erreur';return}
+          if(action==='delete')DATA.comments=DATA.comments.filter(x=>x.id!==c.id);else{c.hidden=action==='hide';if(action==='show')c.reports=0}
+          renderMod()};return b};
+      a.append(c.hidden?mk('Réafficher','show'):mk('Masquer','hide'),mk('Supprimer','delete'));t.appendChild(a);tb.appendChild(t)});
+    if(!list.length){const t=document.createElement('tr');const x=document.createElement('td');x.colSpan=6;x.textContent='Aucun message.';x.style.color='#7a6d8f';t.appendChild(x);tb.appendChild(t)}
+  }
+  $('termf').addEventListener('submit',async e=>{e.preventDefault();const v=$('term').value.trim();if(v.length<2)return;const {error}=await sb.rpc('admin_add_banned_term',{p_term:v});$('term').value='';$('term').placeholder=error?'Erreur':'Ajouté : '+v});
 
   $('csv').onclick=()=>{if(!DATA)return;const esc=v=>'"'+String(v??'').replace(/"/g,'""')+'"';
     const kids={};DATA.profiles.forEach(x=>{if(x.referred_by)kids[x.referred_by]=(kids[x.referred_by]||0)+1});
