@@ -16,6 +16,7 @@
     g.fillStyle='#1d1230';g.fillRect(0,0,OUT_W,OUT_H);
     // jeu au centre, entre les bandeaux
     const top=86,bot=74,h=OUT_H-top-bot,w=Math.min(OUT_W,h*src.width/src.height);
+    const s3=document.getElementById('c3');if(s3&&s3.style.display!=='none')try{g.drawImage(s3,(OUT_W-w)/2,top,w,h)}catch(e){}
     try{g.drawImage(src,(OUT_W-w)/2,top,w,h)}catch(e){}
     // bandeau haut
     g.fillStyle='#1d1230';g.fillRect(0,0,OUT_W,top);
