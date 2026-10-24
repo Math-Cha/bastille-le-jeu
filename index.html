@@ -8,7 +8,7 @@
 <meta property="og:description" content="Black Bloc ou police : choisis ton camp, de la Bastille à la République.">
 <meta property="og:type" content="website">
 <meta name="theme-color" content="#1d1230">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'sha256-k2LXefU4j9WexL8/sRmZAV6K2z8iDYEELIupDUaK1yU=' 'sha256-Gs7FPyAUi7mH9EHdlhQs/G6xNEghMb32/8nk3LJODyo='; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob:; media-src 'self' blob: https://pxxggnhgwzkgwwlrkymb.supabase.co; connect-src 'self' https://pxxggnhgwzkgwwlrkymb.supabase.co wss://pxxggnhgwzkgwwlrkymb.supabase.co; base-uri 'none'; form-action 'none'; object-src 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'sha256-k2LXefU4j9WexL8/sRmZAV6K2z8iDYEELIupDUaK1yU=' 'sha256-vdv+fMqwVY7DDat/QupV2HHCjGvzneAE6CR4JKBuuO8='; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob:; media-src 'self' blob: https://pxxggnhgwzkgwwlrkymb.supabase.co; connect-src 'self' https://pxxggnhgwzkgwwlrkymb.supabase.co wss://pxxggnhgwzkgwwlrkymb.supabase.co; base-uri 'none'; form-action 'none'; object-src 'none'">
 <meta name="referrer" content="strict-origin-when-cross-origin">
 <title>Bastille</title>
 <meta name="claude:viewport-fit-sides" content="cover">
@@ -2009,8 +2009,21 @@ function clearAll(){for(const m of[OBJ,SHOT,CLOUD,KOS]){for(const [,o] of m)scen
 
 // ---------- caméra ----------
 let camX=0,camZ=0,camInit=false;
+// zoom : pincement à deux doigts, molette, boutons + et −
+let ZT=1.3;try{const z=parseFloat(localStorage.getItem('rb_zoom3d'));if(z>=.8&&z<=2)ZT=z}catch(e){}let ZM=ZT;
+function setZoom(z){ZT=Math.max(.8,Math.min(2,z));try{localStorage.setItem('rb_zoom3d',ZT.toFixed(2))}catch(e){}}
+const zbox=document.createElement('div');zbox.id='zoom3d';zbox.hidden=true;zbox.style.cssText='position:absolute;right:12px;bottom:142px;z-index:4;display:flex;flex-direction:column;gap:8px';
+for(const [t,d,l] of[['+',-.15,'Zoomer'],['−',.15,'Dézoomer']]){const b=document.createElement('button');b.type='button';b.textContent=t;b.setAttribute('aria-label',l);b.style.cssText='width:40px;height:40px;border-radius:50%;border:3px solid #1d1230;background:#fbf3e4;color:#1d1230;font:900 20px/1 Unbounded,system-ui,sans-serif;box-shadow:3px 3px 0 #1d1230;cursor:pointer;touch-action:none';
+  b.addEventListener('pointerdown',e=>{e.preventDefault();e.stopPropagation();setZoom(ZT+d)});zbox.appendChild(b)}
+$('stage').appendChild(zbox);
+const PTR=new Map();let pinch0=0,zoom0=1;R.pinching=false;
+cv.addEventListener('pointerdown',e=>{if(!V3)return;PTR.set(e.pointerId,{x:e.clientX,y:e.clientY});if(PTR.size===2){const [a,b]=[...PTR.values()];pinch0=Math.hypot(a.x-b.x,a.y-b.y)||1;zoom0=ZT;R.pinching=true}});
+cv.addEventListener('pointermove',e=>{if(!PTR.has(e.pointerId))return;PTR.set(e.pointerId,{x:e.clientX,y:e.clientY});if(R.pinching&&PTR.size>=2){const [a,b]=[...PTR.values()];const d=Math.hypot(a.x-b.x,a.y-b.y)||1;setZoom(zoom0*pinch0/d)}});
+const pup=e=>{PTR.delete(e.pointerId);if(PTR.size<2)R.pinching=false};cv.addEventListener('pointerup',pup);cv.addEventListener('pointercancel',pup);
+cv.addEventListener('wheel',e=>{if(!V3||!S)return;e.preventDefault();setZoom(ZT+(e.deltaY>0?.08:-.08))},{passive:false});
+
 function placeCam(tx,tz,jz){if(!camInit||Math.abs(tz-camZ)>12){camX=tx;camZ=tz;camInit=true}camX+=(tx*.82-camX)*.08;camZ+=(tz-camZ)*.12;const sh=shake*.06;
-  camera.position.set(camX+(Math.random()-.5)*sh,13+jz*.3+(Math.random()-.5)*sh,camZ+7.5);camera.lookAt(camX,.6,camZ-6.5);
+  ZM+=(ZT-ZM)*.15;camera.position.set(camX+(Math.random()-.5)*sh,13*ZM+jz*.3+(Math.random()-.5)*sh,camZ+7.5*ZM);camera.lookAt(camX,.6,camZ-6.5-(ZM-1)*7);
   sky.position.copy(camera.position);moon.position.set(camera.position.x+30,42,camera.position.z-150);moonGlow.position.copy(moon.position);
   sun.position.copy(camera.position).addScaledVector(cur.sd,60);sun.target.position.copy(camera.position);
   const tt=performance.now()/1000;for(const b of skyBats){if(!b.o.visible)continue;const a=tt*b.sp+b.ph;b.o.position.set(camera.position.x+Math.cos(a)*b.r,b.h+Math.sin(a*3)*.6,camera.position.z-46+Math.sin(a)*b.r*.6);b.o.rotation.y=-a;const f=Math.sin(tt*18+b.ph)*.9;b.o.userData.p.wL.rotation.z=f;b.o.userData.p.wR.rotation.z=-f}}
@@ -2035,15 +2048,15 @@ function snapshots(){// la vue 2D d'Halloween utilise les mêmes illustrations
   try{const wi=new Image();wi.src=WEBT.userData.canvas.toDataURL();SPR.art_web3=wi}catch(e){}}
 // ---------- API ----------
 let lastPreset=null;
-R.render=function(){resize2();const pr=preset();lerpPreset(pr,lastPreset===null?1:.05);lastPreset=pr;
+R.render=function(){resize2();zbox.hidden=false;const pr=preset();lerpPreset(pr,lastPreset===null?1:.05);lastPreset=pr;
   const th=S.hw?'hw':'day';if(th!==theme){theme=th;clearChunks()}chunksFor(curDist());
   syncAll();placeCam(sx3(S.p.x),sz3(S.p.y),(S.p.jz||0)*K);{const pz=sz3(S.p.y);for(const [,g] of chunks)if(g.userData.fades)for(const f of g.userData.fades){const op=(f.z>pz-7&&f.z<camera.position.z+3)?.25:1;const m0=f.mats[0];if(Math.abs(m0.opacity-op)>.01){const v=m0.opacity+(op-m0.opacity)*.2;for(const m of f.mats){m.opacity=v;m.depthWrite=v>.9}for(const o of f.outs)o.visible=v>.9}}}if(FADE.z!=null){const pz=sz3(S.p.y),dz=pz-FADE.z;const op=dz>-3&&dz<18?.28:1;COLMAT.opacity+=(op-COLMAT.opacity)*.15;COLMAT.depthWrite=COLMAT.opacity>.9}renderer.render(scene,camera);overlay()};
-R.renderIdle=function(){resize2();const pr=preset();lerpPreset(pr,lastPreset===null?1:.05);lastPreset=pr;const th=HW?'hw':'day';if(th!==theme){theme=th;clearChunks()}
+R.renderIdle=function(){resize2();zbox.hidden=true;const pr=preset();lerpPreset(pr,lastPreset===null?1:.05);lastPreset=pr;const th=HW?'hw':'day';if(th!==theme){theme=th;clearChunks()}
   if(OBJ.size||PL)clearAll();const d=200+(IDLE_D*1.4)%(MH-1600);chunksFor(d);camInit=false;const x=X3(360)+Math.sin(IDLE_D*.004)*3,z=Z3(d+260);
   camera.position.set(x,9,z+8);camera.lookAt(x*.5,3,z-14);sky.position.copy(camera.position);moon.position.set(camera.position.x+30,42,camera.position.z-150);moonGlow.position.copy(moon.position);sun.position.copy(camera.position).addScaledVector(cur.sd,60);sun.target.position.copy(camera.position);
   renderer.render(scene,camera);ctx.clearRect(0,0,W,H)};
 R.reset=function(){clearAll();camInit=false};
-R.show=function(on){c3.style.display=on?'block':'none';if(!on)ctx.clearRect(0,0,W,H)};
+R.show=function(on){c3.style.display=on?'block':'none';if(!on)zbox.hidden=true;if(!on)ctx.clearRect(0,0,W,H)};
 let lastW=0,lastH=0;function resize2(){const st=$('stage');if(st.clientWidth!==lastW||st.clientHeight!==lastH){lastW=st.clientWidth;lastH=st.clientHeight;resize()}}
 R.dbg={scene,camera,THREE,portrait(kind,ry,sz,cy,res){res=res||384;const sc=new THREE.Scene();sc.background=new THREE.Color(0x3a2a55);sc.add(new THREE.HemisphereLight(0xffffff,0x554466,1.1));const dl=new THREE.DirectionalLight(0xffffff,1);dl.position.set(2,4,5);sc.add(dl);
   let m;if(kind==='witch')m=charModel('police','',true,false);else if(kind==='witchE')m=charModel('police','',true,true);else if(kind==='mage')m=charModel('bloc','',true,false);else if(kind==='mageE')m=charModel('bloc','',true,true);else m=charModel(kind,'',false,true);
@@ -2061,7 +2074,7 @@ let drag=null;
 let tap0=0,tapX=0,tapY=0;
 function jump(){if(!S||S.done||S.paused||S.p.jz>0)return;S.p.jv=7.4;S.p.jz=.01;sfx('jump');burst(S.p.x,S.p.y+22,'#d8dde3',8,2)}
 cv.addEventListener('pointerdown',e=>{if(!S||S.done||S.paused)return;const n=performance.now();if(n-tap0<320&&Math.hypot(e.clientX-tapX,e.clientY-tapY)<48){jump();tap0=0}else{tap0=n;tapX=e.clientX;tapY=e.clientY}cv.setPointerCapture(e.pointerId);drag={x:e.clientX,y:e.clientY}});
-cv.addEventListener('pointermove',e=>{if(!drag||!S||S.done)return;const r=cv.getBoundingClientRect(),k=W/r.width;S.dragDX=(S.dragDX||0)+(e.clientX-drag.x)*k*1.2;S.dragDY=(S.dragDY||0)+(e.clientY-drag.y)*k*1.2;drag={x:e.clientX,y:e.clientY}});
+cv.addEventListener('pointermove',e=>{if(!drag||!S||S.done)return;if(R3.ok&&R3.pinching){drag={x:e.clientX,y:e.clientY};return}const r=cv.getBoundingClientRect(),k=W/r.width;S.dragDX=(S.dragDX||0)+(e.clientX-drag.x)*k*1.2;S.dragDY=(S.dragDY||0)+(e.clientY-drag.y)*k*1.2;drag={x:e.clientX,y:e.clientY}});
 const up=()=>{drag=null};cv.addEventListener('pointerup',up);cv.addEventListener('pointercancel',up);
 addEventListener('keydown',e=>{const m={ArrowLeft:'l',ArrowRight:'r',ArrowUp:'u',ArrowDown:'d'}[e.key];if(m){keys[m]=1;e.preventDefault()}if(e.key==='b'||e.key==='B')bomb();if(e.key==='x'||e.key==='X'){special();e.preventDefault()}if(e.key===' '||e.key==='j'||e.key==='J'){jump();e.preventDefault()}});
 addEventListener('keyup',e=>{const m={ArrowLeft:'l',ArrowRight:'r',ArrowUp:'u',ArrowDown:'d'}[e.key];if(m)keys[m]=0});
