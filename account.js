@@ -189,7 +189,7 @@
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',wireRank);else wireRank();
 
   // ---------- message de vainqueur et signalement de bugs ----------
-  const WERR={not_found:'Partie introuvable (le message doit être écrit dans les 2 h).',already:'Tu as déjà laissé un message pour cette victoire.',banned:'Ton compte ne peut plus publier.',length:'Message trop court ou trop long (2 à 280 caractères).',name:'Choisis un pseudo (2 à 24 caractères).',link:'Les liens et les mentions ne sont pas autorisés.',banned_term:'Ce message contient un terme interdit (insulte, haine ou menace).',rate_limited:'Doucement : trop de messages aujourd\'hui.'};
+  const WERR={not_found:'Partie introuvable : on grave dans les 2 h qui suivent la partie.',already:'Tu as déjà gravé un message pour cette partie.',banned:'Ton compte ne peut plus publier.',length:'Message trop court ou trop long (2 à 280 caractères).',name:'Choisis un pseudo (2 à 24 caractères).',link:'Les liens et les mentions ne sont pas autorisés.',banned_term:'Ce message contient un terme interdit (insulte, haine ou menace).',rate_limited:'Doucement : trop de messages aujourd\'hui.'};
   const errOf=(e,M)=>{const em=(e&&e.message||'').trim();const k=Object.keys(M).sort((x,y)=>y.length-x.length).find(x=>em.includes(x));return k?M[k]:null};
   async function postWin(name,body){
     if(!sb||!last)return 'Le mur est indisponible pour le moment.';
