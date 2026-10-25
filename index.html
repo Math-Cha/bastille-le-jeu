@@ -8,7 +8,7 @@
 <meta property="og:description" content="Révolutionnaires ou police : choisis ton camp, de la Bastille à la République.">
 <meta property="og:type" content="website">
 <meta name="theme-color" content="#1d1230">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'sha256-wi6wnv0GnCcGIBiYkvf1D5WJpC9cILRIw9RWn99oX24=' 'sha256-k2LXefU4j9WexL8/sRmZAV6K2z8iDYEELIupDUaK1yU=' 'sha256-tMlUJ5QWbKfnqxmuNs8i5QjXTdK1hQNV8qYsTvlRUMM='; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob:; media-src 'self' blob: https://pxxggnhgwzkgwwlrkymb.supabase.co; connect-src 'self' https://pxxggnhgwzkgwwlrkymb.supabase.co wss://pxxggnhgwzkgwwlrkymb.supabase.co; base-uri 'none'; form-action 'none'; object-src 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'sha256-wi6wnv0GnCcGIBiYkvf1D5WJpC9cILRIw9RWn99oX24=' 'sha256-k2LXefU4j9WexL8/sRmZAV6K2z8iDYEELIupDUaK1yU=' 'sha256-D5AUI93cyCqX7ifFNIyDhbSh36XLBXxB62rpgS4cUxo='; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob:; media-src 'self' blob: https://pxxggnhgwzkgwwlrkymb.supabase.co; connect-src 'self' https://pxxggnhgwzkgwwlrkymb.supabase.co wss://pxxggnhgwzkgwwlrkymb.supabase.co; base-uri 'none'; form-action 'none'; object-src 'none'">
 <meta name="referrer" content="strict-origin-when-cross-origin">
 <title>Bastille</title>
 <meta name="claude:viewport-fit-sides" content="cover">
@@ -2584,7 +2584,7 @@ snapshots();
 R.ok=true;
 return R;
 })();
-V3=R3.ok&&(()=>{try{return localStorage.getItem('rb_v3d')!=='0'}catch(e){return true}})();
+V3=R3.ok&&(()=>{try{return localStorage.getItem('rb_test2d')!=='1'}catch(e){return true}})();
 if(R3.ok)R3.show(V3);
 
 /* ---------- contrôles ---------- */
@@ -2720,7 +2720,7 @@ function renderEraRows(){for(const rid of['eraRow','shopEra']){const r=$(rid);if
 function title(){S=null;playMusic(HW?'hwtitle':'title');$('t-sub').textContent=eraSub();try{$('ticker').firstElementChild.textContent=EK().tick||TICK0}catch(e){}$('t-hi').textContent=fr(META.hi);$('t-st').textContent=Math.min(10,META.best);{const b=META.bestT||{},v=[b.bloc,b.police].filter(Boolean);$('t-bt').textContent=v.length?' · Bastille en '+fmtT(Math.min(...v)):''}$('t-coins').textContent=fr(META.coins);dBadge();show('s-title');idle()}
 $('disc-ok').onclick=()=>{actx();title()};
 $('t-sound').onclick=toggleMute;
-function v3Label(){const b=$('t-v3d');$('row-v3d').hidden=!R3.ok;b.textContent=V3?'3D':'2D'}
+function v3Label(){const b=$('t-v3d');$('row-v3d').hidden=true;b.textContent=V3?'3D':'2D'}
 $('t-v3d').onclick=()=>{V3=!V3;try{localStorage.setItem('rb_v3d',V3?'1':'0')}catch(e){}R3.show(V3);v3Label()};v3Label();
 function hwLabel(){}
 
