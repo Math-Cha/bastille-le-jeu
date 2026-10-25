@@ -37,8 +37,12 @@
   function gameEnd(g){
     const gkey=uuid();
     last={gkey,side:g.side,score:Math.max(0,Math.round(g.score||0)),stage:Math.max(1,g.stage|0),sent:false,uploaded:null};
-    if(sb){sb.from('games').insert({gkey,visitor,side:g.side,score:last.score,stage:last.stage,bosses:Math.max(0,g.bosses|0),duration_s:Math.max(0,Math.min(86400,g.dur|0)),device,
-      tenue:(g.tenue||'').slice(0,40)||null,arme:(g.arme||'').slice(0,40)||null,exo:(g.exo||'').slice(0,40)||null,picked:(g.picked||'').slice(0,300)||null,perks:(g.perks||'').slice(0,100)||null}).then(()=>setTimeout(showMyRank,600))}
+    if(sb){const row={gkey,visitor,side:g.side,score:last.score,stage:last.stage,bosses:Math.max(0,g.bosses|0),duration_s:Math.max(0,Math.min(86400,g.dur|0)),device,
+      tenue:(g.tenue||'').slice(0,40)||null,arme:(g.arme||'').slice(0,40)||null,exo:(g.exo||'').slice(0,40)||null,picked:(g.picked||'').slice(0,300)||null,perks:(g.perks||'').slice(0,100)||null};
+      last.won=!!g.won;last.time=g.won?Math.max(0,Math.min(86400,g.time|0)):null;
+      const ext=Object.assign({},row,{won:last.won,time_s:last.time,era:(g.era||'').slice(0,12)||null});
+      // les colonnes won/time_s/era arrivent avec la migration du 25/10 : sans elle, on enregistre la partie sans
+      sb.from('games').insert(ext).then(({error})=>{if(error&&/won|time_s|era|column|schema/i.test(error.message||''))return sb.from('games').insert(row)}).then(()=>setTimeout(showMyRank,600))}
     // vidéo
     clipBlob=null;$('clipbox')&&($('clipbox').hidden=true);
     if(window.__btRec&&window.__btRec.supported){
@@ -128,7 +132,8 @@
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>{wire();syncCredits()});else{wire();syncCredits()}
 
   // ---------- classement ----------
-  const RK={side:'bloc',per:'week',from:null};
+  const RK={side:'bloc',per:'week',mode:'pts',from:null};
+  const fmtT=n=>{n=Math.max(0,n|0);return Math.floor(n/60)+':'+String(n%60).padStart(2,'0')};
   const fmtS=(side,n)=>Number(n||0).toLocaleString('fr-FR')+(side==='bloc'?' €':'');
   async function showMyRank(){
     const el=$('mbrank');if(!el||!last||!sb)return;el.textContent='';
@@ -140,24 +145,25 @@
     const list=$('rkList'),me=$('rkMe');if(!list)return;
     document.querySelectorAll('#rkSide button').forEach(b=>b.classList.toggle('on',b.dataset.v===RK.side));
     document.querySelectorAll('#rkPer button').forEach(b=>b.classList.toggle('on',b.dataset.v===RK.per));
+    document.querySelectorAll('#rkMode button').forEach(b=>b.classList.toggle('on',b.dataset.v===RK.mode));const TM=RK.mode==='time';
     list.textContent='';me.textContent='';
     if(!sb){const li=document.createElement('li');li.textContent='Classement indisponible pour le moment.';list.appendChild(li);return}
     const loading=document.createElement('li');loading.className='empty';loading.textContent='Chargement…';list.appendChild(loading);
-    const {data,error}=await sb.rpc('leaderboard',{p_side:RK.side,p_period:RK.per});
+    const {data,error}=await sb.rpc(TM?'leaderboard_time':'leaderboard',{p_side:RK.side,p_period:RK.per});
     list.textContent='';
-    if(error||!data||!data.length){const li=document.createElement('li');li.className='empty';li.textContent=error?'Classement indisponible pour le moment.':'Personne encore sur cette période. À toi !';list.appendChild(li)}
+    if(error||!data||!data.length){const li=document.createElement('li');li.className='empty';li.textContent=error?'Classement indisponible pour le moment.':TM?'Personne n\'a encore pris la Bastille sur cette période. À toi !':'Personne encore sur cette période. À toi !';list.appendChild(li)}
     else data.forEach(r=>{const li=document.createElement('li');if(r.pseudo===LS.get('bt_pseudo'))li.className='me';
       const a=document.createElement('b');a.textContent='#'+r.rank;const n=document.createElement('span');n.textContent=r.pseudo;
-      const d=document.createElement('small');d.textContent=(r.tenue?r.tenue+' · ':'')+'étape '+r.stage;
-      const sc=document.createElement('em');sc.textContent=fmtS(RK.side,r.score);
+      const d=document.createElement('small');d.textContent=(r.tenue?r.tenue+' · ':'')+(TM?(r.era?r.era+' · ':'')+fmtS(RK.side,r.score):'étape '+r.stage);
+      const sc=document.createElement('em');sc.textContent=TM?fmtT(r.time_s):fmtS(RK.side,r.score);
       const mid=document.createElement('div');mid.append(n,d);li.append(a,mid,sc);list.appendChild(li)});
     const u=await user();
-    if(u){const {data:m}=await sb.rpc('my_rank',{p_side:RK.side,p_period:RK.per});const r=m&&m[0];me.textContent=r?'Toi ('+(r.pseudo||'')+') : #'+r.rank+' sur '+r.total+' · '+fmtS(RK.side,r.score):'Tu n\'as pas encore de partie classée sur cette période.'}
+    if(u){const {data:m}=await sb.rpc(TM?'my_rank_time':'my_rank',{p_side:RK.side,p_period:RK.per});const r=m&&m[0];me.textContent=r?'Toi ('+(r.pseudo||'')+') : #'+r.rank+' sur '+r.total+' · '+(TM?fmtT(r.time_s):fmtS(RK.side,r.score)):TM?'Tu n\'as pas encore pris la Bastille sur cette période.':'Tu n\'as pas encore de partie classée sur cette période.'}
     else me.textContent=C.mail?'Reçois ton score par e-mail en fin de partie pour entrer au classement.':'Inscription au classement bientôt disponible.';
   }
   function openRank(from){
     const scr=$('s-rank');if(!scr)return;RK.from=from||null;
-    if(last&&last.side)RK.side=last.side;
+    if(last&&last.side)RK.side=last.side;if(last&&last.won)RK.mode='time';
     if(from)$(from).hidden=true;scr.hidden=false;loadRank();
   }
   function closeRank(){$('s-rank').hidden=true;if(RK.from)$(RK.from).hidden=false}
@@ -169,6 +175,7 @@
     $('rk-back').onclick=closeRank;
     document.querySelectorAll('#rkSide button').forEach(b=>b.onclick=()=>{RK.side=b.dataset.v;loadRank()});
     document.querySelectorAll('#rkPer button').forEach(b=>b.onclick=()=>{RK.per=b.dataset.v;loadRank()});
+    document.querySelectorAll('#rkMode button').forEach(b=>b.onclick=()=>{RK.mode=b.dataset.v;loadRank()});
     $('mbreroll').onclick=async()=>{const {data,error}=await sb.rpc('reroll_pseudo');if(!error&&data){LS.set('bt_pseudo',data);$('mbpseudo').textContent=data}};
     const del=$('mbdel');del.onclick=async()=>{
       if(del.dataset.c!=='1'){del.dataset.c='1';del.textContent='Confirmer la suppression définitive ?';setTimeout(()=>{del.dataset.c='';del.textContent='Supprimer mon compte'},5000);return}
