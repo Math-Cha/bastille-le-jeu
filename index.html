@@ -8,7 +8,7 @@
 <meta property="og:description" content="Sois le plus rapide à libérer la Bastille ! Révolutionnaires ou forces de l’ordre : choisis ton camp.">
 <meta property="og:type" content="website">
 <meta name="theme-color" content="#1d1230">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'sha256-n0/Yh/soxr6Su6DKr/owhMTyF+zykOh/7G5vCRPV33s=' 'sha256-k2LXefU4j9WexL8/sRmZAV6K2z8iDYEELIupDUaK1yU=' 'sha256-VE7QW5AWrulfqI38U7xdoSysaAstzeN7+tAsSgUkR14='; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob:; media-src 'self' blob: https://pxxggnhgwzkgwwlrkymb.supabase.co; connect-src 'self' https://pxxggnhgwzkgwwlrkymb.supabase.co wss://pxxggnhgwzkgwwlrkymb.supabase.co; base-uri 'none'; form-action 'none'; object-src 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'sha256-n0/Yh/soxr6Su6DKr/owhMTyF+zykOh/7G5vCRPV33s=' 'sha256-k2LXefU4j9WexL8/sRmZAV6K2z8iDYEELIupDUaK1yU=' 'sha256-Wm668+Q9ApW4z4YgG/2K4Mnw/PFUc3YkC4QQRjy5ewo='; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob:; media-src 'self' blob: https://pxxggnhgwzkgwwlrkymb.supabase.co; connect-src 'self' https://pxxggnhgwzkgwwlrkymb.supabase.co wss://pxxggnhgwzkgwwlrkymb.supabase.co; base-uri 'none'; form-action 'none'; object-src 'none'">
 <meta name="referrer" content="strict-origin-when-cross-origin">
 <title>Bastille</title>
 <meta name="claude:viewport-fit-sides" content="cover">
@@ -2651,8 +2651,8 @@ function placeCam(tx,tz,jz){if(!camInit||Math.abs(tz-camZ)>12){camX=tx;camZ=tz;c
 const _p=new THREE.Vector3();
 function proj(x,y,z){_p.set(x,y,z).project(camera);return {x:(_p.x+1)/2*W,y:(1-_p.y)/2*H,vis:_p.z<1}}
 function overlay(){ctx.clearRect(0,0,W,H);
-  if(S.boostT>0&&!S.boss&&!(S.preBoss>0)){ctx.save();ctx.lineCap='round';for(let i=0;i<22;i++){const sd=(i*977)%W,ph=((frame*26+i*137)%(H+200))-100,x=sd,len=60+(i*53)%90,a=.18+((i*31)%10)/40;ctx.strokeStyle='rgba(255,255,240,'+a.toFixed(2)+')';ctx.lineWidth=1.5+(i%3);const cx=W/2,dx=(x-cx)*.0;ctx.beginPath();ctx.moveTo(x+dx,ph);ctx.lineTo(x+dx,ph+len);ctx.stroke()}
-    const g=ctx.createRadialGradient(W/2,H*.55,H*.25,W/2,H*.55,H*.8);g.addColorStop(0,'rgba(198,244,50,0)');g.addColorStop(1,'rgba(198,244,50,.22)');ctx.fillStyle=g;ctx.fillRect(0,0,W,H);ctx.restore()}
+  if(S.boostT>0&&!S.boss&&!(S.preBoss>0)){ctx.save();ctx.lineCap='round';for(let i=0;i<22;i++){const sd=(i*977)%W,ph=((frame*26+i*137)%(H+200))-100,x=sd,len=60+(i*53)%90,a=.18+((i*31)%10)/40;ctx.strokeStyle='rgba(255,255,240,'+a.toFixed(2)+')';ctx.lineWidth=1.5+(i%3);ctx.beginPath();ctx.moveTo(x,ph);ctx.lineTo(x,ph+len);ctx.stroke()}
+    ctx.fillStyle='rgba(198,244,50,.16)';ctx.fillRect(0,0,10,H);ctx.fillRect(W-10,0,10,H);ctx.restore()}
   if(S.stun>0){ctx.fillStyle=S.side==='bloc'?'rgba(255,60,200,.14)':'rgba(182,255,60,.14)';ctx.fillRect(0,0,W,H)}
   if(S.preBoss>0){const a=.25+.2*Math.sin(frame*.25),g=ctx.createRadialGradient(W/2,H/2,H*.3,W/2,H/2,H*.75);g.addColorStop(0,'rgba(255,45,58,0)');g.addColorStop(1,'rgba(255,45,58,'+a.toFixed(2)+')');ctx.fillStyle=g;ctx.fillRect(0,0,W,H)}
   if(S.hw)hwVignette();if(S.mut==='pluie')mutOverlay();
