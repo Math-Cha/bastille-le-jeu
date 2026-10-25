@@ -3,12 +3,12 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="description" content="BASTILLE — le jeu satirique de la manif République–Bastille. Black Bloc ou police : choisis ton camp.">
+<meta name="description" content="BASTILLE — le jeu satirique de la manif République–Bastille. Révolutionnaires ou police : choisis ton camp.">
 <meta property="og:title" content="BASTILLE — le jeu de la manif">
-<meta property="og:description" content="Black Bloc ou police : choisis ton camp, de la Bastille à la République.">
+<meta property="og:description" content="Révolutionnaires ou police : choisis ton camp, de la Bastille à la République.">
 <meta property="og:type" content="website">
 <meta name="theme-color" content="#1d1230">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'sha256-k2LXefU4j9WexL8/sRmZAV6K2z8iDYEELIupDUaK1yU=' 'sha256-cx1Ub8Z934JVOgUh4YpJ0lLPjkUyzfNEAjCw0elWMEo='; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob:; media-src 'self' blob: https://pxxggnhgwzkgwwlrkymb.supabase.co; connect-src 'self' https://pxxggnhgwzkgwwlrkymb.supabase.co wss://pxxggnhgwzkgwwlrkymb.supabase.co; base-uri 'none'; form-action 'none'; object-src 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'sha256-k2LXefU4j9WexL8/sRmZAV6K2z8iDYEELIupDUaK1yU=' 'sha256-/RMAXJ9eFfITJ9A3ES8lBBQnxm4MmCEuLJbbHI5Fx7Y='; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob:; media-src 'self' blob: https://pxxggnhgwzkgwwlrkymb.supabase.co; connect-src 'self' https://pxxggnhgwzkgwwlrkymb.supabase.co wss://pxxggnhgwzkgwwlrkymb.supabase.co; base-uri 'none'; form-action 'none'; object-src 'none'">
 <meta name="referrer" content="strict-origin-when-cross-origin">
 <title>Bastille</title>
 <meta name="claude:viewport-fit-sides" content="cover">
@@ -318,7 +318,7 @@ canvas#c{position:absolute;inset:0;width:100%;height:100%;display:block;touch-ac
   <div class="screen" id="s-rank" hidden>
     <h2>CLASSEMENT</h2>
     <div class="tabs" id="rkMode"><button type="button" data-v="pts">POINTS</button><button type="button" data-v="time">TEMPS (BASTILLE PRISE)</button></div>
-    <div class="tabs" id="rkSide"><button type="button" data-v="bloc">BLACK BLOC</button><button type="button" data-v="police">POLICE</button></div>
+    <div class="tabs" id="rkSide"><button type="button" data-v="bloc">RÉVOLUTIONNAIRES</button><button type="button" data-v="police">POLICE</button></div>
     <div class="tabs" id="rkPer"><button type="button" data-v="day">AUJOURD'HUI</button><button type="button" data-v="week">7 JOURS</button><button type="button" data-v="all">TOUJOURS</button></div>
     <ol id="rkList"></ol>
     <p id="rkMe"></p>
@@ -330,7 +330,7 @@ canvas#c{position:absolute;inset:0;width:100%;height:100%;display:block;touch-ac
     <div class="erarow" id="eraRow"></div>
     <p class="eramsg" id="eraMsg"></p>
     <div class="choice">
-      <button class="b" id="pickBloc"><canvas id="pvB" width="72" height="72"></canvas><b id="cnB">BLACK BLOC</b><small id="cdB">Casse, pille, lance. Score en points.</small></button>
+      <button class="b" id="pickBloc"><canvas id="pvB" width="72" height="72"></canvas><b id="cnB">RÉVOLUTIONNAIRES</b><small id="cdB">Casse, pille, lance. Score en points.</small></button>
       <button class="p" id="pickPolice"><canvas id="pvP" width="72" height="72"></canvas><b id="cnP">POLICE</b><small id="cdP">Gaze, nasse, interpelle. Score en points.</small></button>
     </div>
     <p id="campHint">Les lycéens traversent avec leurs pancartes. Ils rapportent des points aux deux camps.</p>
@@ -341,7 +341,7 @@ canvas#c{position:absolute;inset:0;width:100%;height:100%;display:block;touch-ac
     <h2>KIOSQUE</h2>
     <div id="coins">PIÈCES <span id="sh-coins">0</span></div>
     <div id="shop">
-      <div id="camptabs"><button class="b on" data-c="bloc">BLACK BLOC</button><button class="p" data-c="police">POLICE</button></div>
+      <div id="camptabs"><button class="b on" data-c="bloc">RÉVOLUTIONNAIRES</button><button class="p" data-c="police">POLICE</button></div>
       <canvas class="prev" id="pvShop" width="72" height="72"></canvas>
       <div class="erarow" id="shopEra"></div>
       <div class="tabs"><button class="on" data-t="tenue">TENUE</button><button data-t="sac">ARMES</button><button data-t="arme">TIR</button><button data-t="perk">BONUS</button><button data-t="era">ÉPOQUES</button></div>
@@ -446,7 +446,7 @@ load();
 
 const SHOP={
  tenue:[
-  {id:'b0',side:'bloc',n:'BLACK BLOC',d:'Capuche noire, masque, combi',p:0,bloc:{hood:'#15161c',body:'#15161c',mask:'none'}},
+  {id:'b0',side:'bloc',n:'RÉVOLUTIONNAIRE',d:'Capuche noire, masque, combi',p:0,bloc:{hood:'#15161c',body:'#15161c',mask:'none'}},
   {id:'b1',side:'bloc',n:'GILET JAUNE',d:'Gilet de signalisation fluo',p:120,spr:0,bloc:{hood:'#f2d52b',body:'#15161c',mask:'none'}},
   {id:'b2',side:'bloc',n:'BONNET ROUGE',d:'Bonnet rouge, veste grise',p:180,spr:1,bloc:{hood:'#c8202a',body:'#2b2b33',mask:'none'}},
   {id:'b3',side:'bloc',n:'INFIRMIÈRE',d:'Blouse blanche, croix bleue',p:280,spr:2,bloc:{hood:'#e8ecf5',body:'#e8ecf5',mask:'gas'}},
@@ -558,7 +558,7 @@ const ERAS={
    police:[{id:'w3_lacry',n:'LACRYMO',base:1,d:'Grenades lacrymogènes'},{id:'w3_mat',n:'MATRAQUE',fx:'bat',c:18,pt:'matraque',sk:'matraque',d:'Coup court et rapide'},{id:'w3_bouclier',n:'BOUCLIER',fx:'plank',c:12,pt:'planche',sk:'bouclier68',d:'Commence avec trois coups de bouclier'},
      {id:'w3_lanceg',n:'LANCE-GRENADES',fx:'gas3',c:22,p:220,d:'Trois grenades en éventail'},{id:'w3_offensive',n:'GRENADE OFFENSIVE',fx:'boom',c:34,pt:'mortier',sk:'gren',p:280,d:'Explose au bout de sa course'},{id:'w3_mousqueton',n:'MOUSQUETON',fx:'pierce',c:14,sk:'gaz',p:180,d:'Tir tendu qui traverse'}]}},
  'now':{y:'2026',n:'LA MANIF',p:1200,cu:'€',cur:'€',modern:1,veh:'v_carnow',
-  camp:{bloc:'BLACK BLOC',police:'POLICE'},sh:{bloc:'BLOC',police:'CRS'},
+  camp:{bloc:'RÉVOLUTIONNAIRES',police:'POLICE'},sh:{bloc:'RÉVOLTÉ',police:'CRS'},
   dsc:{bloc:'Casse, pille, lance. Score en points.',police:'Gaze, nasse, interpelle. Score en points.'},
   lv:LV_NOW,bilan:'BILAN DE LA PRÉFECTURE',read:'Revendications lues',src:'Pendant ce temps, les lycéens sont rentrés dans des classes sans chauffage.',
   hint:'Les lycéens traversent avec leurs pancartes. Ils rapportent des points aux deux camps.',lbl:{fast:{bloc:'MOTARD',police:'SCOOTER'},air:{bloc:'DRONE',police:'TOIT'}},peak:'LES MOTOS !',
@@ -2729,7 +2729,7 @@ $('shop-back').onclick=()=>shopBack();
 for(const b of document.querySelectorAll('#camptabs button'))b.onclick=()=>{shopSide=b.dataset.c;renderShop()};
 for(const b of document.querySelectorAll('.tabs button'))b.onclick=()=>{shopTab=b.dataset.t;renderShop()};
 function renderShop(){
-  $('sh-coins').textContent=META.coins;renderEraRows();
+  $('sh-coins').textContent=META.coins;renderEraRows();for(const b of document.querySelectorAll('#camptabs button'))b.textContent=EK().camp[b.dataset.c];
   if(shopTab==='sac'||shopTab==='era'||shopTab==='tenue'&&(OLD()||EK().hw)){renderShop2();return}
   for(const b of document.querySelectorAll('#camptabs button'))b.classList.toggle('on',b.dataset.c===shopSide);
   for(const b of document.querySelectorAll('.tabs button'))b.classList.toggle('on',b.dataset.t===shopTab);

@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
 <meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'sha256-ot7eXfp3xJTeUH5Q6Q5rdj65gjKwcN1B2M+R1qEbaU0='; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob:; media-src 'self' blob: https://pxxggnhgwzkgwwlrkymb.supabase.co; connect-src 'self' https://pxxggnhgwzkgwwlrkymb.supabase.co wss://pxxggnhgwzkgwwlrkymb.supabase.co; base-uri 'none'; form-action 'none'; object-src 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'sha256-/VJULqP7FmXy2sEfTI2b7PdNuVHWVpzczpVWPag8XBs='; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob:; media-src 'self' blob: https://pxxggnhgwzkgwwlrkymb.supabase.co; connect-src 'self' https://pxxggnhgwzkgwwlrkymb.supabase.co wss://pxxggnhgwzkgwwlrkymb.supabase.co; base-uri 'none'; form-action 'none'; object-src 'none'">
 <meta name="referrer" content="strict-origin-when-cross-origin">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Bastille · Scores</title>
@@ -69,7 +69,7 @@ footer a{color:#c9bfd6}
 
   <section class="panel">
     <h2>Meilleurs joueurs</h2>
-    <div class="tabs" id="tSide"><button type="button" data-v="bloc">BLACK BLOC</button><button type="button" data-v="police">POLICE</button></div>
+    <div class="tabs" id="tSide"><button type="button" data-v="bloc">RÉVOLUTIONNAIRES</button><button type="button" data-v="police">POLICE</button></div>
     <div class="tabs" id="tPer"><button type="button" data-v="day">AUJOURD'HUI</button><button type="button" data-v="week">7 JOURS</button><button type="button" data-v="all">TOUJOURS</button></div>
     <ol id="rank"></ol>
     <p id="me"></p>
@@ -81,7 +81,7 @@ footer a{color:#c9bfd6}
     <form id="post" hidden novalidate>
       <textarea id="body" maxlength="280" placeholder="Ton message pour les autres joueurs (280 caractères, sans lien)" aria-label="Ton message"></textarea>
       <div class="row">
-        <label>Camp <select id="side"><option value="">—</option><option value="bloc">Black Bloc</option><option value="police">Police</option></select></label>
+        <label>Camp <select id="side"><option value="">—</option><option value="bloc">Révolutionnaires</option><option value="police">Police</option></select></label>
         <span id="count">0 / 280</span>
         <button class="btn" type="submit" id="send">PUBLIER</button>
       </div>
@@ -121,7 +121,7 @@ footer a{color:#c9bfd6}
 
   function renderMsg(c){
     const li=el('li');const head=el('div','head');head.append(el('span','who',c.pseudo||'Joueur'));
-    if(c.side)head.append(el('span','tag '+c.side,c.side==='bloc'?'BLACK BLOC':'POLICE'));
+    if(c.side)head.append(el('span','tag '+c.side,c.side==='bloc'?'RÉVOLUTIONNAIRES':'POLICE'));
     if(c.best)head.append(el('span','','record '+fmt(c.side||'bloc',c.best)));
     head.append(el('span','',ago(c.created_at)));
     li.append(head,el('p','',c.body));

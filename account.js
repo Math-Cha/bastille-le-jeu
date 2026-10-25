@@ -46,7 +46,7 @@
     // vidéo
     clipBlob=null;$('clipbox')&&($('clipbox').hidden=true);
     if(window.__btRec&&window.__btRec.supported){
-      const card={title:g.title||'GAME OVER',score:g.scoreTxt||String(last.score),sub:(g.side==='bloc'?'Black Bloc':'Police')+' · étape '+last.stage};
+      const card={title:g.title||'GAME OVER',score:g.scoreTxt||String(last.score),sub:(g.side==='bloc'?'Révolutionnaires':'Police')+' · étape '+last.stage};
       clipP=window.__btRec.stop(card).then(b=>{clipBlob=b&&b.size>20000?b:null;showClip();return clipBlob});
     }else clipP=Promise.resolve(null);
     renderAcct();
