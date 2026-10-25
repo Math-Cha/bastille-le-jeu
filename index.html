@@ -8,7 +8,7 @@
 <meta property="og:description" content="Révolutionnaires ou police : choisis ton camp, de la Bastille à la République.">
 <meta property="og:type" content="website">
 <meta name="theme-color" content="#1d1230">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'sha256-wi6wnv0GnCcGIBiYkvf1D5WJpC9cILRIw9RWn99oX24=' 'sha256-k2LXefU4j9WexL8/sRmZAV6K2z8iDYEELIupDUaK1yU=' 'sha256-89AkJArziW92uJZ+17CdAePwYH7wPAYxQ0BDjJsyuAs='; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob:; media-src 'self' blob: https://pxxggnhgwzkgwwlrkymb.supabase.co; connect-src 'self' https://pxxggnhgwzkgwwlrkymb.supabase.co wss://pxxggnhgwzkgwwlrkymb.supabase.co; base-uri 'none'; form-action 'none'; object-src 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'sha256-wi6wnv0GnCcGIBiYkvf1D5WJpC9cILRIw9RWn99oX24=' 'sha256-k2LXefU4j9WexL8/sRmZAV6K2z8iDYEELIupDUaK1yU=' 'sha256-tMlUJ5QWbKfnqxmuNs8i5QjXTdK1hQNV8qYsTvlRUMM='; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob:; media-src 'self' blob: https://pxxggnhgwzkgwwlrkymb.supabase.co; connect-src 'self' https://pxxggnhgwzkgwwlrkymb.supabase.co wss://pxxggnhgwzkgwwlrkymb.supabase.co; base-uri 'none'; form-action 'none'; object-src 'none'">
 <meta name="referrer" content="strict-origin-when-cross-origin">
 <title>Bastille</title>
 <meta name="claude:viewport-fit-sides" content="cover">
@@ -1181,13 +1181,13 @@ function winGame(){const F=S.fin;F.ph='won';S.won=1;S.finSec=runSec();S.coins+=3
   stageCard('BASTILLE PRISE !',(S.side==='bloc'?'Le cortège':'La police')+' entre dans la forteresse','Temps : '+fmtT(S.finSec)+' · +300 pièces',2600,'win');
   setTimeout(()=>{if(S&&!S.done)endGame()},2700)}
 // la forteresse, dessinée en 2D (vue de face, comme les personnages)
-function drawFort(){const cam=curCam(),gx=GATE_WX-cam,gy=screenY(GATE_WY);if(gy<-30||gy>H+260)return;
+function drawFort(){const cam=curCam(),gx=GATE_WX-cam,gy=screenY(GATE_WY);if(gy<-30||gy>H+460)return;
   const F=S&&S.fin,open=F&&F.ph!=='siege',hp=F&&F.ph==='siege'?F.cur/F.max:1,O='#1d1230';
   const st='#cdbf9f',sh='#a8997a',hi='#e2d6ba',dk='#8f8064';
   const R2=(x,y,w,h,c)=>{ctx.fillStyle=c;ctx.fillRect(Math.round(x),Math.round(y),Math.round(w),Math.round(h))};
   const block=(x,y,w,h,c)=>{R2(x-2,y-2,w+4,h+4,O);R2(x,y,w,h,c)};
   const merlons=(x,y,w,c)=>{for(let k=x;k<x+w-4;k+=12){R2(k-2,y-11,10,11,O);R2(k,y-9,6,9,c)}};
-  ctx.save();
+  ctx.save();ctx.translate(0,gy);ctx.scale(1,1.7);ctx.translate(0,-gy);
   // ombre au sol
   ctx.fillStyle='rgba(20,12,34,.35)';ctx.fillRect(gx-270,gy-2,540,14);
   // tours arrière
@@ -2358,7 +2358,7 @@ function buildChunk(ci){
   if(!(EC.skip&&EC.skip.p_lamp))for(let y=wy0+((ci*97)%60);y<wy1;y+=240)for(const xs of[176,544])if(walkable(xs,y)&&!ROADS.some(r=>r[0]===0&&y>r[1]-20&&y<r[3]+20)){put(M_LAMP,X3(xs),Z3(y),0);const gl=new THREE.Sprite(lampGlowMat);gl.scale.set(3,3,1);gl.position.set(X3(xs),3.95,Z3(y));g.add(gl)}
   if(hw){for(let y=wy0+20;y<wy1;y+=60)for(const side of[-1,1]){if(R()<.45){const e=edgeAt(side,y);if(e==null)continue;put(M_PUMP,X3(e)-side*.9,Z3(y),side<0?PI/2:-PI/2);const gl=glow(0xff9a2a,1.6,.8);gl.position.set(X3(e)-side*.9,.45,Z3(y));g.add(gl)}
     else if(R()<.12){const e=edgeAt(side,y);if(e==null)continue;put(M_TOMB,X3(e)-side*1.1,Z3(y),side<0?PI/2:-PI/2)}}}
-  if(GATE_WY>=wy0&&GATE_WY<wy1){const f=model('fort',M_FORT);f.position.set(X3(GATE_WX),0,Z3(GATE_WY));f.scale.set(1,.6,1);g.add(f);FORT=f}
+  if(GATE_WY>=wy0&&GATE_WY<wy1){const f=model('fort',M_FORT);f.position.set(X3(GATE_WX),0,Z3(GATE_WY));f.scale.set(1,1.05,1);g.add(f);FORT=f}
   if(dec.length){const m=merge(dec,.03);g.add(mine(new THREE.Mesh(m.geo,TOON)));if(m.og)g.add(mine(new THREE.Mesh(m.og,OUT)))}
   scene.add(g);return g;
 }
