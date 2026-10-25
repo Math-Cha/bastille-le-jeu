@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
 <meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'sha256-TAjnmpqMgMz2GmxfSUue3xHhL4U5Rqt1fDO5ADlk8NI='; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob:; media-src 'self' blob: https://pxxggnhgwzkgwwlrkymb.supabase.co; connect-src 'self' https://pxxggnhgwzkgwwlrkymb.supabase.co wss://pxxggnhgwzkgwwlrkymb.supabase.co; base-uri 'none'; form-action 'none'; object-src 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'sha256-4L6I1bF9yL7l+3fgw2RSF/m30HJ2F+E1JvkuiFeQFeA='; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob:; media-src 'self' blob: https://pxxggnhgwzkgwwlrkymb.supabase.co; connect-src 'self' https://pxxggnhgwzkgwwlrkymb.supabase.co wss://pxxggnhgwzkgwwlrkymb.supabase.co; base-uri 'none'; form-action 'none'; object-src 'none'">
 <meta name="referrer" content="strict-origin-when-cross-origin">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Bastille · Scores</title>
@@ -50,6 +50,7 @@ select{font:14px var(--sans);padding:7px 9px;border:2px solid var(--ink);border-
 #wall .who{font-weight:800;color:var(--ink);font-size:14px}
 #wall .tag{font:700 10px var(--pix);padding:2px 6px;border-radius:6px;background:var(--ink);color:var(--paper)}
 #wall .tag.police{background:var(--cobalt)}#wall .tag.win{background:#ffd23a;color:#1d1230}#wall .tag.lost{background:#e8e2d6;color:#5b4e6e}
+.merit{border:2px dashed var(--line);border-radius:14px;padding:14px;margin:0 0 14px;background:rgba(255,255,255,.55)}.merit .mq{font:800 18px var(--unb);margin:0 0 6px}.merit p{margin:0 0 10px}.camps{display:flex;flex-wrap:wrap;gap:10px}.camp{flex:1 1 200px;text-align:center;text-decoration:none;display:flex;flex-direction:column;gap:2px}.camp small{font-size:11px;opacity:.8;font-weight:600}.camp.police{background:var(--cobalt);color:#fff}
 #wall p{margin:6px 0 4px;white-space:pre-wrap;word-wrap:break-word;overflow-wrap:anywhere}
 #wall .act{display:flex;gap:12px}
 .link{background:none;border:0;padding:0;font:600 12px var(--sans);color:var(--mute);text-decoration:underline;cursor:pointer}
@@ -77,7 +78,12 @@ footer a{color:#c9bfd6}
 
   <section class="panel mint">
     <h2>Le mur de la Bastille</h2><p class="note" style="margin:-4px 0 10px">Les slogans et cris de victoire gravés par les joueurs.</p>
-    <p id="info"></p>
+    <div class="merit">
+      <p class="mq">Auras-tu le droit d'écrire sur ce mur ?</p>
+      <p>Ici, on ne grave pas son nom gratuitement : il faut le mériter. Choisis ton camp, joue ta partie, et à la fin, victoire ou défaite, tu pourras graver ton pseudo et ton message dans la pierre.</p>
+      <div class="camps"><a class="btn camp bloc" href="index.html?camp=bloc">JE PRENDS LA BASTILLE<small>Révolutionnaires</small></a><a class="btn camp police" href="index.html?camp=police">JE DÉFENDS LA BASTILLE<small>Forces de l'ordre</small></a></div>
+    </div>
+    <p id="info" hidden></p>
     <form id="post" hidden novalidate>
       <textarea id="body" maxlength="280" placeholder="Ton message pour les autres joueurs (280 caractères, sans lien)" aria-label="Ton message"></textarea>
       <div class="row">
@@ -121,7 +127,7 @@ footer a{color:#c9bfd6}
 
   function renderMsg(c){
     const li=el('li');const head=el('div','head');head.append(el('span','who',c.pseudo||'Joueur'));
-    if(c.side)head.append(el('span','tag '+c.side,c.side==='bloc'?'RÉVOLUTIONNAIRES':'POLICE'));
+    if(c.side)head.append(el('span','tag '+c.side,c.side==='bloc'?'RÉVOLUTIONNAIRE':'FORCES DE L\'ORDRE'));
     if(c.best)head.append(el('span','','record '+fmt(c.side||'bloc',c.best)));
     if(c.won===false&&c.stage)head.append(el('span','tag lost','PERDU · ÉTAPE '+c.stage+'/10'+(c.era?' · '+(c.era==='now'?'2026':c.era==='hw'?'HALLOWEEN':c.era):'')+(c.score?' · '+fmt(c.side||'bloc',c.score):'')));
     if(c.won)head.append(el('span','tag win','🏆 BASTILLE PRISE'+(c.era?' · '+(c.era==='now'?'2026':c.era==='hw'?'HALLOWEEN':c.era):'')+(c.time_s?' · '+Math.floor(c.time_s/60)+':'+String(c.time_s%60).padStart(2,'0'):'')));
@@ -138,7 +144,7 @@ footer a{color:#c9bfd6}
     if(!sb){wall.appendChild(el('li','empty','Mur indisponible pour le moment.'));return}
     const {data,error}=await sb.rpc('wall',{p_before:more?oldest:null,p_limit:30});
     if(error){wall.appendChild(el('li','empty','Mur indisponible pour le moment.'));return}
-    if(!more&&!data.length)wall.appendChild(el('li','empty','Aucun message pour l\'instant. Lance la discussion !'));
+    if(!more&&!data.length)wall.appendChild(el('li','empty','Le mur est encore vierge. Sois le premier à le mériter !'));
     data.forEach(c=>wall.appendChild(renderMsg(c)));
     if(data.length)oldest=data[data.length-1].created_at;
     $('more').hidden=data.length<30;
@@ -164,9 +170,6 @@ footer a{color:#c9bfd6}
     $('more').onclick=()=>loadWall(true);
     if(sb){const {data}=await sb.auth.getSession();user=data.session?data.session.user:null}
     if(user){try{const {data:p}=await sb.from('profiles').select('pseudo').eq('id',user.id).maybeSingle();myPseudo=(p&&p.pseudo)||''}catch(e){}}
-    if(user&&C.mail){$('post').hidden=false;$('info').textContent='Tu écris en tant que « '+(myPseudo||'joueur')+' ». Messages publics et modérés : pas d\'insulte, de haine, de menace ni de lien.';wireForm()}
-    else if(C.mail){$('info').textContent='Pour écrire sur le mur, joue une partie puis reçois ton score par e-mail : ton compte sera créé avec un pseudo.'}
-    else{$('info').textContent='L\'écriture sur le mur ouvre très bientôt. En attendant, lis les messages et grimpe au classement !'}
     loadRank();loadWall(false);
   }
   boot();
