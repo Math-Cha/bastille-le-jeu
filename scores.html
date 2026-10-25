@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
 <meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'sha256-qvNjeEtYfDtKE8nDtT+rbaWP1WL2vEU7VRk0A8FrWA4='; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob:; media-src 'self' blob: https://pxxggnhgwzkgwwlrkymb.supabase.co; connect-src 'self' https://pxxggnhgwzkgwwlrkymb.supabase.co wss://pxxggnhgwzkgwwlrkymb.supabase.co; base-uri 'none'; form-action 'none'; object-src 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'sha256-ot7eXfp3xJTeUH5Q6Q5rdj65gjKwcN1B2M+R1qEbaU0='; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob:; media-src 'self' blob: https://pxxggnhgwzkgwwlrkymb.supabase.co; connect-src 'self' https://pxxggnhgwzkgwwlrkymb.supabase.co wss://pxxggnhgwzkgwwlrkymb.supabase.co; base-uri 'none'; form-action 'none'; object-src 'none'">
 <meta name="referrer" content="strict-origin-when-cross-origin">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Bastille · Scores</title>
@@ -100,7 +100,7 @@ footer a{color:#c9bfd6}
   const $=id=>document.getElementById(id);
   const C=window.BT_CONFIG||{};
   const sb=(C.url&&C.key&&window.supabase)?window.supabase.createClient(C.url,C.key,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}}):null;
-  const fmt=(side,n)=>Number(n||0).toLocaleString('fr-FR')+(side==='bloc'?' €':'');
+  const fmt=(side,n)=>Number(n||0).toLocaleString('fr-FR')+' pts';
   const ago=d=>{const s=(Date.now()-new Date(d))/1000;if(s<60)return 'à l\'instant';if(s<3600)return 'il y a '+Math.floor(s/60)+' min';if(s<86400)return 'il y a '+Math.floor(s/3600)+' h';return new Date(d).toLocaleDateString('fr-FR',{day:'numeric',month:'short'})};
   const el=(tag,cls,txt)=>{const e=document.createElement(tag);if(cls)e.className=cls;if(txt!=null)e.textContent=txt;return e};
   let RK={side:'bloc',per:'week'},user=null,oldest=null,myPseudo='';

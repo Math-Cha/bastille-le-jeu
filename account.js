@@ -134,7 +134,7 @@
   // ---------- classement ----------
   const RK={side:'bloc',per:'week',mode:'pts',from:null};
   const fmtT=n=>{n=Math.max(0,n|0);return Math.floor(n/60)+':'+String(n%60).padStart(2,'0')};
-  const fmtS=(side,n)=>Number(n||0).toLocaleString('fr-FR')+(side==='bloc'?' €':'');
+  const fmtS=(side,n)=>Number(n||0).toLocaleString('fr-FR')+' pts';
   async function showMyRank(){
     const el=$('mbrank');if(!el||!last||!sb)return;el.textContent='';
     const u=await user();if(!u)return;

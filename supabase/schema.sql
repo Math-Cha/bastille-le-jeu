@@ -512,3 +512,16 @@ $$;
 revoke all on function public.leaderboard_time(text,text), public.my_rank_time(text,text) from public;
 grant execute on function public.leaderboard_time(text,text) to anon, authenticated;
 grant execute on function public.my_rank_time(text,text) to authenticated;
+
+-- score identique pour les deux camps (points) : même contrôle de vraisemblance
+create or replace function public.games_guard() returns trigger
+language plpgsql security definer set search_path = public as $$
+begin
+  if new.duration_s < 3 then raise exception 'too_short'; end if;
+  if new.stage > 1 + new.duration_s / 12 then raise exception 'implausible_stage'; end if;
+  if new.bosses > new.stage * 2 then raise exception 'implausible_bosses'; end if;
+  if new.score > 200000 + new.duration_s * 60000 then raise exception 'implausible_score'; end if;
+  if exists (select 1 from public.games where visitor = new.visitor and created_at > now() - interval '5 seconds') then raise exception 'rate_limited'; end if;
+  if (select count(*) from public.games where visitor = new.visitor and created_at > now() - interval '1 day') >= 300 then raise exception 'rate_limited'; end if;
+  return new;
+end $$;
