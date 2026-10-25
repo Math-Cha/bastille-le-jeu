@@ -188,5 +188,19 @@
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',wireRank);else wireRank();
 
-  window.__bt={enabled:()=>ok,gameStart,gameEnd,renderAcct};
+  // ---------- message de vainqueur et signalement de bugs ----------
+  const WERR={not_winner:'Ce message est réservé aux parties gagnées depuis moins de 2 h.',already:'Tu as déjà laissé un message pour cette victoire.',banned:'Ton compte ne peut plus publier.',length:'Message trop court ou trop long (2 à 280 caractères).',name:'Choisis un pseudo (2 à 24 caractères).',link:'Les liens et les mentions ne sont pas autorisés.',banned_term:'Ce message contient un terme interdit (insulte, haine ou menace).',rate_limited:'Doucement : trop de messages aujourd\'hui.'};
+  const errOf=(e,M)=>{const em=(e&&e.message||'').trim();const k=Object.keys(M).sort((x,y)=>y.length-x.length).find(x=>em.includes(x));return k?M[k]:null};
+  async function postWin(name,body){
+    if(!sb||!last||!last.won)return 'Le mur est indisponible pour le moment.';
+    LS.set('bt_wname',name);
+    for(let i=0;i<3;i++){const {error}=await sb.rpc('post_win_comment',{p_gkey:last.gkey,p_visitor:visitor,p_name:name,p_body:body});
+      if(!error)return true;if(!/not_winner/.test(error.message||'')||i===2)return errOf(error,WERR)||'Publication impossible pour le moment.';await new Promise(r=>setTimeout(r,1500))}
+  }
+  async function reportBug(body,ctx){
+    if(!sb)return 'Envoi impossible pour le moment.';
+    const {error}=await sb.rpc('report_bug',{p_visitor:visitor,p_body:body,p_ctx:Object.assign({},ctx||{},{page:location.pathname})});
+    if(!error)return true;return /rate_limited/.test(error.message||'')?'Doucement : attends un peu avant d\'envoyer un autre signalement.':'Envoi impossible pour le moment.';
+  }
+  window.__bt={enabled:()=>ok,gameStart,gameEnd,renderAcct,postWin,reportBug};
 })();
