@@ -8,7 +8,7 @@
 <meta property="og:description" content="Black Bloc ou police : choisis ton camp, de la Bastille à la République.">
 <meta property="og:type" content="website">
 <meta name="theme-color" content="#1d1230">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'sha256-k2LXefU4j9WexL8/sRmZAV6K2z8iDYEELIupDUaK1yU=' 'sha256-z356wvdGRliU1IEGsWhzZk21+QELH+2KBzuJxdN1IwA='; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob:; media-src 'self' blob: https://pxxggnhgwzkgwwlrkymb.supabase.co; connect-src 'self' https://pxxggnhgwzkgwwlrkymb.supabase.co wss://pxxggnhgwzkgwwlrkymb.supabase.co; base-uri 'none'; form-action 'none'; object-src 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'sha256-k2LXefU4j9WexL8/sRmZAV6K2z8iDYEELIupDUaK1yU=' 'sha256-R0MYn4EkAE3ObSDjyCgUpUteguD3jhEDryZiNml2rB8='; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob:; media-src 'self' blob: https://pxxggnhgwzkgwwlrkymb.supabase.co; connect-src 'self' https://pxxggnhgwzkgwwlrkymb.supabase.co wss://pxxggnhgwzkgwwlrkymb.supabase.co; base-uri 'none'; form-action 'none'; object-src 'none'">
 <meta name="referrer" content="strict-origin-when-cross-origin">
 <title>Bastille</title>
 <meta name="claude:viewport-fit-sides" content="cover">
@@ -593,7 +593,7 @@ const ERAS={
 ERAS.now.w.bloc.push(...EXO.bloc);ERAS.now.w.police.push(...EXO.police);ERAS.hw.w=ERAS.now.w;ERAS.hw.lv=LV_NOW;
 // ---------- trois armes par camp et par époque : portée courte et très rapide, portée moyenne, longue portée ----------
 // + armes puissantes à ramasser en jeu (10 s) ; + armes du kiosque à mettre dans le sac
-const RNG={c:{px:175,sp:11,cd:13,dmg:1,lbl:'COURTE'},m:{px:330,sp:9.5,cd:20,dmg:1.3,lbl:'MOYENNE'},l:{px:640,sp:13.5,cd:28,dmg:2.2,lbl:'LONGUE'}};
+const RNG={c:{px:135,sp:10,cd:17,dmg:1,lbl:'COURTE'},m:{px:250,sp:8.5,cd:27,dmg:1.2,lbl:'MOYENNE'},l:{px:470,sp:12,cd:38,dmg:2,lbl:'LONGUE'}};
 const RD={c:'Portée courte, très rapide.',m:'Portée moyenne, cadence moyenne.',l:'Longue portée, cadence moyenne, frappe fort.'};
 const DEF3={
  '1789':{bloc:[['FOURCHE','c','fourche','fourche'],['FRONDE','m','pierre','pave'],['MOUSQUET','l','mball','balle']],police:[['BAÏONNETTE','c','baio','batte'],['GRENADES','m','boulet','pave'],['MOUSQUET','l','mball','balle']]},
@@ -621,7 +621,7 @@ function animT(o){const a=o.arm||0,ph=o.ph||0;let dy=0;
 function frK(k,arm){const t=k+'_t';return (arm||0)>.3&&ready(t)?t:k}
 function drawAnim(x,y,o,fn){const A=animT(o);ctx.save();ctx.translate(x,y+A.dy);ctx.rotate(A.rot);ctx.scale(A.sx,A.sy);const r=fn(0,0);ctx.restore();
   if(r!==false&&(o.arm||0)>.7&&o.kind==='gun'){const k=(o.arm-.55)*2.2;ctx.globalAlpha=Math.min(1,k);circ(x+(o.mx||9),y-(o.my||34),6,'#ffd23a');circ(x+(o.mx||9),y-(o.my||34),2.8,'#fff');ctx.globalAlpha=.25*k;circ(x+(o.mx||9),y-(o.my||34)-6,9,'#e8e4dc');ctx.globalAlpha=1}return r}
-function fireSlot(w,xs,pw,lv){const R=RNG[w.rng],p=S.p,y=p.y-24;S.cool=R.cd*fireK();const n=w.rng==='c'?[2,3,4][lv]:[1,2,3][lv],spr=w.rng==='c'?1.5:.9;
+function fireSlot(w,xs,pw,lv){const R=RNG[w.rng],p=S.p,y=p.y-24;S.cool=R.cd*fireK();const n=w.rng==='c'?[1,2,3][lv]:w.rng==='m'?[1,2,2][lv]:[1,1,2][lv],spr=w.rng==='c'?1.5:.9;
   for(const x of xs)for(let i=0;i<n;i++){const d=(i-(n-1)/2)*spr,o={x:x+d*3,y,vx:d,vy:-R.sp,t:w.t||'pave',sk:w.sk,max:R.px*(.9+Math.random()*.2),dmg:R.dmg,r:0,pw};if(w.rng==='l')o.pierce=1;if(pw>1)o.pierce=(o.pierce||0)+pw-1;S.shots.push(o)}}
 function eraOwned(id){if(id==='1789')return true;if(id==='hw')return (META.wins||0)>0||!!(META.eraOwn&&META.eraOwn.hw);return !!(META.eraOwn&&META.eraOwn[id])}
 let ERA_ID=(()=>{const e=META.era;return ERA_IDS.includes(e)&&eraOwned(e)?e:'1789'})();
@@ -1291,7 +1291,7 @@ function rampK(){return Math.min(1,(S.runT||0)/(60*150))}
 // la troupe : chaque bonhomme ajouté (recrue, x2, x4) accroît le nombre d'adversaires et la puissance des tirs
 function intervalK(){return 1/(1+.18*(S.troop-1))/(S.adapt||1)}
 function fireK(){return 1+.05*(S.troop-1)}
-function powerK(){return Math.min(5,1+Math.floor((S.troop-1)/3)+Math.floor(S.level/2))}
+function powerK(){return Math.min(3,1+Math.floor((S.troop-1)/4)+Math.floor(S.level/4))}
 function groupsK(){return Math.min(3,1+Math.floor((S.troop-1)/3))}
 const ALLY_OFF=[[-26,10],[26,10],[-44,26],[44,26],[-20,34],[20,34],[-62,44],[62,44]];
 // nuages de gaz et fumée : ils restent à l'endroit du tir
@@ -1563,9 +1563,9 @@ function fire(){
   if(S.cool>0)return;
   sfx('shot');
   const p=S.p,lv=armeLvl(S.side),pw=powerK(),xs=[p.x+10];
-  for(let i=0;i<Math.min(S.troop-1,ALLY_OFF.length);i++)xs.push(p.x+ALLY_OFF[i][0]+10);
+  for(let i=0;i<Math.min(S.troop-1,2);i++)xs.push(p.x+ALLY_OFF[i][0]+10);
   p.arm=1;if(S.triple>0)for(const d of[-2.4,2.4])S.shots.push({x:p.x+10,y:p.y-24,vx:d,vy:-9,t:'etoile',pw:1});
-  if(S.weapon){S.cool=S.weapon.w.c*.85;for(const x of xs)fireWeapon(S.weapon.w,x,pw+1);return}
+  if(S.weapon){S.cool=S.weapon.w.c*1.2;for(const x of xs)fireWeapon(S.weapon.w,x,pw);return}
   {const w=S.slots&&S.slots[S.slot||0];if(w&&w.rng){fireSlot(w,xs,pw,lv);return}if(w&&w.fx){S.cool=w.c*fireK();for(const x of xs)fireWeapon(w,x,pw);return}}
   const add=o=>{o.pw=pw;if(pw>1)o.pierce=(o.pierce||0)+pw-1;S.shots.push(o)};
   if(OLD()){const sk=EK().base[S.side],t=sk==='gaz'?'gaz':'pave';S.cool=(t==='gaz'?[10,9,8]:[16,13,11])[lv]*fireK();
