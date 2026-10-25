@@ -27,7 +27,7 @@
     const {data}=await sb.from('profiles').select('credits_bonus,ref_code,pseudo').eq('id',u.id).maybeSingle();if(!data)return;
     LS.set('bt_refcode',data.ref_code);if(data.pseudo)LS.set('bt_pseudo',data.pseudo);
     const k='bt_claimed_'+u.id,done=+(LS.get(k)||0),delta=(data.credits_bonus||0)-done;
-    if(delta>0&&window.__btAddCoins){window.__btAddCoins(delta);LS.set(k,String(data.credits_bonus));toast('PARRAINAGE : +'+delta+' CRÉDITS')}
+    if(delta>0&&window.__btAddCoins){window.__btAddCoins(delta);LS.set(k,String(data.credits_bonus));toast('PARRAINAGE : +'+delta+' PIÈCES')}
     renderAcct();
   }
   function toast(t){const d=document.createElement('div');d.textContent=t;d.style.cssText='position:fixed;left:50%;top:18px;transform:translateX(-50%);z-index:99;background:#2ee6b0;color:#1d1230;font:700 13px Figtree,system-ui,sans-serif;padding:9px 14px;border-radius:12px;box-shadow:3px 3px 0 #1d1230';document.body.appendChild(d);setTimeout(()=>d.remove(),3200)}
@@ -116,7 +116,7 @@
       if(error){msg('Code incorrect ou expiré.','err');return}
       const news=$('mbnews').checked;pendingEmail='';
       try{await sb.rpc('set_news_consent',{ok:news})}catch(e){}
-      const ref=LS.get('bt_ref');if(ref){try{const {data}=await sb.rpc('claim_referral',{code:ref});LS.del('bt_ref');if(data>0)toast('BIENVENUE : +'+data+' CRÉDITS')}catch(e){}}
+      const ref=LS.get('bt_ref');if(ref){try{const {data}=await sb.rpc('claim_referral',{code:ref});LS.del('bt_ref');if(data>0)toast('BIENVENUE : +'+data+' PIÈCES')}catch(e){}}
       msg('Connecté !','ok');await syncCredits();await renderAcct();
       if(last&&!last.sent)sendScore();
     });
