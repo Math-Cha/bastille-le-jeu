@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
 <meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'sha256-okkEL7H9VoXL+kI7o9YbBWgANTBnivSJL9fkmt2+cp8='; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob:; media-src 'self' blob: https://pxxggnhgwzkgwwlrkymb.supabase.co; connect-src 'self' https://pxxggnhgwzkgwwlrkymb.supabase.co wss://pxxggnhgwzkgwwlrkymb.supabase.co; base-uri 'none'; form-action 'none'; object-src 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'sha256-TAjnmpqMgMz2GmxfSUue3xHhL4U5Rqt1fDO5ADlk8NI='; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob:; media-src 'self' blob: https://pxxggnhgwzkgwwlrkymb.supabase.co; connect-src 'self' https://pxxggnhgwzkgwwlrkymb.supabase.co wss://pxxggnhgwzkgwwlrkymb.supabase.co; base-uri 'none'; form-action 'none'; object-src 'none'">
 <meta name="referrer" content="strict-origin-when-cross-origin">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Bastille · Scores</title>
@@ -49,7 +49,7 @@ select{font:14px var(--sans);padding:7px 9px;border:2px solid var(--ink);border-
 #wall .head{display:flex;gap:8px;align-items:baseline;flex-wrap:wrap;font-size:12.5px;color:var(--mute)}
 #wall .who{font-weight:800;color:var(--ink);font-size:14px}
 #wall .tag{font:700 10px var(--pix);padding:2px 6px;border-radius:6px;background:var(--ink);color:var(--paper)}
-#wall .tag.police{background:var(--cobalt)}#wall .tag.win{background:#ffd23a;color:#1d1230}
+#wall .tag.police{background:var(--cobalt)}#wall .tag.win{background:#ffd23a;color:#1d1230}#wall .tag.lost{background:#e8e2d6;color:#5b4e6e}
 #wall p{margin:6px 0 4px;white-space:pre-wrap;word-wrap:break-word;overflow-wrap:anywhere}
 #wall .act{display:flex;gap:12px}
 .link{background:none;border:0;padding:0;font:600 12px var(--sans);color:var(--mute);text-decoration:underline;cursor:pointer}
@@ -123,6 +123,7 @@ footer a{color:#c9bfd6}
     const li=el('li');const head=el('div','head');head.append(el('span','who',c.pseudo||'Joueur'));
     if(c.side)head.append(el('span','tag '+c.side,c.side==='bloc'?'RÉVOLUTIONNAIRES':'POLICE'));
     if(c.best)head.append(el('span','','record '+fmt(c.side||'bloc',c.best)));
+    if(c.won===false&&c.stage)head.append(el('span','tag lost','PERDU · ÉTAPE '+c.stage+'/10'+(c.era?' · '+(c.era==='now'?'2026':c.era==='hw'?'HALLOWEEN':c.era):'')+(c.score?' · '+fmt(c.side||'bloc',c.score):'')));
     if(c.won)head.append(el('span','tag win','🏆 BASTILLE PRISE'+(c.era?' · '+(c.era==='now'?'2026':c.era==='hw'?'HALLOWEEN':c.era):'')+(c.time_s?' · '+Math.floor(c.time_s/60)+':'+String(c.time_s%60).padStart(2,'0'):'')));
     head.append(el('span','',ago(c.created_at)));
     li.append(head,el('p','',c.body));

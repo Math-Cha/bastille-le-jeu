@@ -338,6 +338,14 @@ create table if not exists public.comments (
   reports int not null default 0,
   created_at timestamptz not null default now()
 );
+alter table public.comments alter column user_id drop not null;
+alter table public.comments add column if not exists won boolean not null default false;
+alter table public.comments add column if not exists era text check (era is null or length(era) <= 12);
+alter table public.comments add column if not exists time_s int;
+alter table public.comments add column if not exists anon_name text check (anon_name is null or char_length(anon_name) between 2 and 24);
+alter table public.comments add column if not exists gkey uuid unique;
+alter table public.comments add column if not exists visitor text;
+
 create index if not exists comments_recent on public.comments (created_at desc) where not hidden;
 create table if not exists public.comment_reports (
   comment_id bigint references public.comments(id) on delete cascade,
@@ -400,14 +408,15 @@ begin
 end $$;
 
 -- Lire le mur : messages visibles, auteurs non exclus, pseudo et meilleur score (jamais l'e-mail)
+drop function if exists public.wall(timestamptz,int);
 create or replace function public.wall(p_before timestamptz default null, p_limit int default 30)
-returns table (id bigint, pseudo text, body text, side text, best bigint, created_at timestamptz, mine boolean)
+returns table (id bigint, pseudo text, body text, side text, best bigint, created_at timestamptz, mine boolean, won boolean, era text, time_s int)
 language sql stable security definer set search_path = public as $$
-  select c.id, p.pseudo, c.body, c.side,
-         (select max(g.score) from public.games g where g.user_id = c.user_id and g.side = coalesce(c.side, g.side)),
-         c.created_at, c.user_id = auth.uid()
-  from public.comments c join public.profiles p on p.id = c.user_id and not p.banned
-  where not c.hidden and (p_before is null or c.created_at < p_before)
+  select c.id, coalesce(p.pseudo, c.anon_name, 'Joueur'), c.body, c.side,
+         case when c.user_id is null then null else (select max(g.score) from public.games g where g.user_id = c.user_id and g.side = coalesce(c.side, g.side)) end,
+         c.created_at, c.user_id is not null and c.user_id = auth.uid(), c.won, c.era, c.time_s
+  from public.comments c left join public.profiles p on p.id = c.user_id
+  where not c.hidden and (c.user_id is null or not coalesce(p.banned,false)) and (p_before is null or c.created_at < p_before)
   order by c.created_at desc
   limit least(greatest(coalesce(p_limit, 30), 1), 50);
 $$;
@@ -525,3 +534,108 @@ begin
   if (select count(*) from public.games where visitor = new.visitor and created_at > now() - interval '1 day') >= 300 then raise exception 'rate_limited'; end if;
   return new;
 end $$;
+
+
+-- ============ Messages des vainqueurs (prise de la Bastille) ============
+-- Un message par victoire : la partie (gkey) doit être gagnée, récente (2 h) et venir du même navigateur (visitor) ou du même compte
+create or replace function public.post_win_comment(p_gkey uuid, p_visitor text, p_name text, p_body text) returns bigint
+language plpgsql security definer set search_path = public as $$
+declare uid uuid := auth.uid(); g record; b text; n text; nid bigint;
+begin
+  select * into g from public.games where gkey = p_gkey and won and created_at > now() - interval '2 hours'
+    and (visitor = p_visitor or (uid is not null and user_id = uid)) limit 1;
+  if not found then raise exception 'not_winner'; end if;
+  if exists (select 1 from public.comments where gkey = p_gkey) then raise exception 'already'; end if;
+  if uid is not null and exists (select 1 from public.profiles where id = uid and banned) then raise exception 'banned'; end if;
+  b := btrim(regexp_replace(regexp_replace(coalesce(p_body,''), '[[:cntrl:]]', ' ', 'g'), '\s+', ' ', 'g'));
+  n := btrim(regexp_replace(regexp_replace(coalesce(p_name,''), '[[:cntrl:]]', ' ', 'g'), '\s+', ' ', 'g'));
+  if char_length(b) < 2 or char_length(b) > 280 then raise exception 'length'; end if;
+  if uid is null and (char_length(n) < 2 or char_length(n) > 24) then raise exception 'name'; end if;
+  if (b || ' ' || n) ~* '(https?://|www\.|[a-z0-9-]+\.(com|fr|net|org|io|ly|gg|me|tv|co|xyz|info|biz|ru|be|ch)\b|@[a-z0-9_]{3,})' then raise exception 'link'; end if;
+  if public.has_banned(b) or public.has_banned(n) then raise exception 'banned_term'; end if;
+  if (select count(*) from public.comments where visitor = p_visitor and created_at > now() - interval '1 day') >= 10 then raise exception 'rate_limited'; end if;
+  insert into public.comments (user_id, body, side, won, era, time_s, anon_name, gkey, visitor)
+  values (uid, b, g.side, true, g.era, g.time_s, case when uid is null then n end, p_gkey, left(p_visitor, 64)) returning id into nid;
+  return nid;
+end $$;
+revoke execute on function public.post_win_comment(uuid,text,text,text) from public;
+grant execute on function public.post_win_comment(uuid,text,text,text) to anon, authenticated;
+
+-- ============ Signalement de bugs ============
+create table if not exists public.bug_reports (
+  id bigint generated always as identity primary key,
+  created_at timestamptz not null default now(),
+  user_id uuid references auth.users(id) on delete set null,
+  visitor text,
+  body text not null check (char_length(body) between 5 and 1000),
+  ctx jsonb,
+  status text not null default 'nouveau' check (status in ('nouveau','vu','corrigé','ignoré'))
+);
+alter table public.bug_reports enable row level security;
+revoke all on public.bug_reports from anon, authenticated;
+drop policy if exists "admin bugs" on public.bug_reports;
+create policy "admin bugs" on public.bug_reports for select to authenticated using (public.is_admin());
+grant select on public.bug_reports to authenticated;
+
+create or replace function public.report_bug(p_visitor text, p_body text, p_ctx jsonb) returns bigint
+language plpgsql security definer set search_path = public as $$
+declare b text; nid bigint;
+begin
+  b := btrim(regexp_replace(coalesce(p_body,''), '[[:cntrl:]]', ' ', 'g'));
+  if char_length(b) < 5 or char_length(b) > 1000 then raise exception 'length'; end if;
+  if exists (select 1 from public.bug_reports where visitor = p_visitor and created_at > now() - interval '30 seconds') then raise exception 'rate_limited'; end if;
+  if (select count(*) from public.bug_reports where visitor = p_visitor and created_at > now() - interval '1 day') >= 15 then raise exception 'rate_limited'; end if;
+  insert into public.bug_reports (user_id, visitor, body, ctx) values (auth.uid(), left(p_visitor,64), b, case when octet_length(coalesce(p_ctx::text,'')) <= 2000 then p_ctx end) returning id into nid;
+  return nid;
+end $$;
+create or replace function public.admin_set_bug(p_id bigint, p_status text) returns void
+language plpgsql security definer set search_path = public as $$
+begin
+  if not public.is_admin() then raise exception 'forbidden'; end if;
+  update public.bug_reports set status = p_status where id = p_id;
+end $$;
+revoke execute on function public.report_bug(text,text,jsonb), public.admin_set_bug(bigint,text) from public;
+grant execute on function public.report_bug(text,text,jsonb) to anon, authenticated;
+grant execute on function public.admin_set_bug(bigint,text) to authenticated;
+-- BASTILLE — migration du 25/10/2026 (3) : un message sur le mur après chaque partie, gagnée ou perdue
+-- Idempotente : peut être rejouée sans risque.
+alter table public.comments add column if not exists stage int;
+alter table public.comments add column if not exists score bigint;
+
+create or replace function public.post_game_comment(p_gkey uuid, p_visitor text, p_name text, p_body text) returns bigint
+language plpgsql security definer set search_path = public as $$
+declare uid uuid := auth.uid(); g record; b text; n text; nid bigint;
+begin
+  select * into g from public.games where gkey = p_gkey and created_at > now() - interval '2 hours'
+    and (visitor = p_visitor or (uid is not null and user_id = uid)) limit 1;
+  if not found then raise exception 'not_found'; end if;
+  if exists (select 1 from public.comments where gkey = p_gkey) then raise exception 'already'; end if;
+  if uid is not null and exists (select 1 from public.profiles where id = uid and banned) then raise exception 'banned'; end if;
+  b := btrim(regexp_replace(regexp_replace(coalesce(p_body,''), '[[:cntrl:]]', ' ', 'g'), '\s+', ' ', 'g'));
+  n := btrim(regexp_replace(regexp_replace(coalesce(p_name,''), '[[:cntrl:]]', ' ', 'g'), '\s+', ' ', 'g'));
+  if char_length(b) < 2 or char_length(b) > 280 then raise exception 'length'; end if;
+  if uid is null and (char_length(n) < 2 or char_length(n) > 24) then raise exception 'name'; end if;
+  if (b || ' ' || n) ~* '(https?://|www\.|[a-z0-9-]+\.(com|fr|net|org|io|ly|gg|me|tv|co|xyz|info|biz|ru|be|ch)\b|@[a-z0-9_]{3,})' then raise exception 'link'; end if;
+  if public.has_banned(b) or public.has_banned(n) then raise exception 'banned_term'; end if;
+  if (select count(*) from public.comments where visitor = p_visitor and created_at > now() - interval '1 day') >= 10 then raise exception 'rate_limited'; end if;
+  insert into public.comments (user_id, body, side, won, era, time_s, anon_name, gkey, visitor, stage, score)
+  values (uid, b, g.side, coalesce(g.won,false), g.era, case when g.won then g.time_s end, case when uid is null then n end, p_gkey, left(p_visitor, 64), g.stage, g.score) returning id into nid;
+  return nid;
+end $$;
+revoke execute on function public.post_game_comment(uuid,text,text,text) from public;
+grant execute on function public.post_game_comment(uuid,text,text,text) to anon, authenticated;
+
+drop function if exists public.wall(timestamptz,int);
+create or replace function public.wall(p_before timestamptz default null, p_limit int default 30)
+returns table (id bigint, pseudo text, body text, side text, best bigint, created_at timestamptz, mine boolean, won boolean, era text, time_s int, stage int, score bigint)
+language sql stable security definer set search_path = public as $$
+  select c.id, coalesce(p.pseudo, c.anon_name, 'Joueur'), c.body, c.side,
+         case when c.user_id is null then null else (select max(g.score) from public.games g where g.user_id = c.user_id and g.side = coalesce(c.side, g.side)) end,
+         c.created_at, c.user_id is not null and c.user_id = auth.uid(), c.won, c.era, c.time_s, c.stage, c.score
+  from public.comments c left join public.profiles p on p.id = c.user_id
+  where not c.hidden and (c.user_id is null or not coalesce(p.banned,false)) and (p_before is null or c.created_at < p_before)
+  order by c.created_at desc
+  limit least(greatest(coalesce(p_limit, 30), 1), 50);
+$$;
+revoke execute on function public.wall(timestamptz,int) from public;
+grant execute on function public.wall(timestamptz,int) to anon, authenticated;
